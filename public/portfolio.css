@@ -4,7 +4,9 @@
 .portfolio-form input:not([type="range"]), .portfolio-form select { display:block; width:100%; border:1px solid var(--line); border-radius:8px; background:#fff; color:var(--ink); margin-top:6px; padding:11px; font:inherit; }
 .portfolio-form fieldset { grid-column:1 / -1; border:1px solid var(--line); border-radius:10px; padding:14px; margin:0; }
 .portfolio-form legend { color:var(--muted); font-size:12px; padding:0 4px; }
-.portfolio-form input[type="range"] { width:100%; accent-color:var(--green); }
+.portfolio-form input[type="range"] { width:100%; accent-color:var(--green); cursor:pointer; }
 .range-labels { display:flex; justify-content:space-between; color:var(--muted); font-size:10px; }
+.risk-field { background:#f7faf7; } .risk-field legend strong { color:var(--green); margin-left:6px; } .risk-hint { margin:9px 0 0; color:#456252; font-size:12px; }
 .primary-button { grid-column:1 / -1; border:0; border-radius:8px; padding:12px 16px; color:white; background:var(--green); font:inherit; font-weight:800; cursor:pointer; }
 @media (max-width:760px) { .portfolio-form { grid-template-columns:1fr; } }
+
