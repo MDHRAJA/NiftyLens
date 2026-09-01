@@ -33,13 +33,13 @@ function renderPlanReview() {
   const highConcentration = portfolio.allocation >= 25;
   const approach = highConcentration ? `A better approach: cap ${portfolio.stock} near 20% and direct new monthly contributions toward a diversified Nifty 50 fund or under-represented sectors.` : `Your allocation is below the 25% concentration watch level. Keep reviewing it as new contributions change the balance.`;
   const evidenceNote = marketContext.mode === "live" && marketContext.evidence?.length ? "Market evidence will be cited alongside plan suggestions." : "No verified market data is connected yet; Gemini will review your plan without claiming anything about the market.";
-  byId("planAnalysis").innerHTML = `<div class="plan-review"><span class="eyebrow">Plan review · scenario engine</span><h3>${highConcentration ? "Concentration is the main trade-off." : "Your plan is reasonably diversified at this allocation."}</h3><p>Illustrative value after ${years} year${years > 1 ? "s" : ""}; includes your ₹${portfolio.monthly.toLocaleString("en-IN")} monthly contribution. Returns are scenarios, not forecasts.</p><div class="projection-grid">${scenarios.map((scenario) => { const value = futureValue(scenario.rate, years); return `<div class="projection"><span>${scenario.label}</span><strong>₹${Math.round(value).toLocaleString("en-IN")}</strong><small>${Math.round(scenario.rate * 100)}% annual scenario · gain ₹${Math.max(0, Math.round(value - invested)).toLocaleString("en-IN")}</small></div>`; }).join("")}</div><div class="alternative"><strong>Suggested approach</strong>${approach}</div><button class="ai-button" id="askAiReview" type="button">Ask AI to review my plan</button><div id="aiReview" class="ai-review" aria-live="polite">${evidenceNote}</div></div>`;
-  byId("askAiReview").addEventListener("click", requestAiReview);
+  byId("planAnalysis").innerHTML = `<div class="plan-review"><span class="eyebrow">Plan review · scenario engine</span><h3>${highConcentration ? "Concentration is the main trade-off." : "Your plan is reasonably diversified at this allocation."}</h3><p>Illustrative value after ${years} year${years > 1 ? "s" : ""}; includes your ₹${portfolio.monthly.toLocaleString("en-IN")} monthly contribution. Returns are scenarios, not forecasts.</p><div class="projection-grid">${scenarios.map((scenario) => { const value = futureValue(scenario.rate, years); return `<div class="projection"><span>${scenario.label}</span><strong>₹${Math.round(value).toLocaleString("en-IN")}</strong><small>${Math.round(scenario.rate * 100)}% annual scenario · gain ₹${Math.max(0, Math.round(value - invested)).toLocaleString("en-IN")}</small></div>`; }).join("")}</div><div class="alternative"><strong>Suggested approach</strong>${approach}</div><div id="aiReview" class="ai-review" aria-live="polite"><span class="ai-loading"><i></i>Analysing your inputs with current market context…</span></div></div>`;
+  requestAiReview();
 }
 
 async function requestAiReview() {
-  const button = byId("askAiReview"); const target = byId("aiReview");
-  button.disabled = true; button.textContent = "Reviewing your plan…"; target.textContent = "";
+  const target = byId("aiReview");
+  target.innerHTML = `<span class="ai-loading"><i></i>Analysing your inputs with current market context…</span>`;
   try {
     const response = await fetch("/api/plan-review", { method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify({ plan: portfolio, marketContext }) });
     const data = await response.json().catch(() => ({}));
@@ -49,7 +49,7 @@ async function requestAiReview() {
     target.innerHTML = `<strong>${review.headline}</strong><p>${review.assessment}</p><p><b>Better approach:</b> ${review.better_approach}</p><p><b>Risks:</b> ${(review.risks || []).join(" · ")}</p><p><b>Questions to consider:</b> ${(review.questions || []).join(" · ")}</p><p><b>Evidence status:</b> ${evidenceText}</p>`;
   } catch (error) {
     target.innerHTML = `<strong>AI review is not configured yet.</strong><p>${error.message} Add <code>GEMINI_API_KEY</code> to Vercel before deploying. The scenario engine above still works locally.</p>`;
-  } finally { button.disabled = false; button.textContent = "Ask AI to critique this plan"; }
+  }
 }
 
 function openPortfolioDialog() {
