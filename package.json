@@ -5,7 +5,8 @@
   "description": "Explainable India-market intelligence for retail investors.",
   "scripts": {
     "start": "node server.js",
-    "test": "node --test"
+    "test": "node --test",
+    "check": "node --check public/app.js && node --check api/plan-review.mjs && node --check api/snapshot.mjs && node --check api/stock-consensus.mjs"
   },
   "engines": {
     "node": ">=20"
