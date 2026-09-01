@@ -176,7 +176,7 @@ If Gemini returns an unavailable or malformed response, NiftyLens uses a determi
 1. **Momentum agent** — assesses the current delayed move against the previous close.
 2. **Earnings agent** — checks whether a current reported quarterly net-income evidence point is available.
 3. **Risk agent** — evaluates the direction and size of the current one-day move.
-4. **Synthesis agent** — uses Gemini, when available, to weigh agreement, conflict, live evidence, and downside/volatility vetoes. It is explicitly prohibited from averaging agent scores, issuing trade instructions, or claiming unsupported market facts.
+4. **Sentinel Agent** — uses Gemini, when available, to weigh agreement, conflict, live evidence, and downside/volatility vetoes. It is explicitly prohibited from averaging agent scores, issuing trade instructions, or claiming unsupported market facts.
 
 If Gemini is unavailable, the transparent rules fallback applies the same principle: a downside or volatility veto can override positive signals; otherwise agreement and evidence quality drive the final bullish, neutral, or cautious stance.
 
