@@ -35,3 +35,14 @@ test("plan review rejects non-POST requests", async () => {
   assert.equal(response.status, 405);
 });
 
+test("plan review safely returns a calculated fallback for an empty plan", async () => {
+  const originalKey = process.env.GEMINI_API_KEY;
+  delete process.env.GEMINI_API_KEY;
+  const response = await handler.fetch(new Request("http://localhost/api/plan-review", { method:"POST", body:"{}" }));
+  const data = await response.json();
+  if (originalKey === undefined) delete process.env.GEMINI_API_KEY; else process.env.GEMINI_API_KEY = originalKey;
+  assert.equal(response.status, 200);
+  assert.equal(data.fallback, true);
+  assert.equal(data.planFacts.portfolio_value_inr, 0);
+});
+
