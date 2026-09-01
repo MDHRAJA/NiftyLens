@@ -93,7 +93,7 @@ The production Vercel routes are different:
 | --- | --- |
 | `npm install` | Validates/install project metadata. There are currently no external dependencies. |
 | `npm start` | Starts the local static server at `http://localhost:4173`. |
-| `npm test` | Runs Node’s built-in test runner. No automated test files are currently included. |
+| `npm test` | Runs the Node built-in test suite in `test/`. |
 
 Useful checks before committing:
 
@@ -102,6 +102,15 @@ node --check public/app.js
 git diff --check
 npm test
 ```
+
+### Test coverage
+
+The repository includes evaluator-friendly Node tests with no external test dependency:
+
+- `test/plan-review.test.mjs` checks multi-holding portfolio facts and method validation.
+- `test/snapshot.test.mjs` mocks quote/fundamentals providers and checks the live snapshot, earnings evidence, and constituent count.
+
+Run them with `npm test` (or `node --test` if your machine’s npm installation is unavailable).
 
 ## Environment variables
 
