@@ -8,6 +8,7 @@ const PUBLIC_DIR = path.join(__dirname, "public");
 const marketSnapshot = {
   asOf: "01 Sep 2026, 12:45 IST",
   mode: process.env.UPSTOX_ACCESS_TOKEN ? "connector-configured" : "demo",
+  evidence: [],
   index: { name: "NIFTY 50", value: 24896.4, change: 0.63, breadth: "32 gainers / 18 losers", status: "Constructive" },
   signals: [
     { label: "Momentum", value: "Positive", detail: "Above 20-day and 50-day average", confidence: 78 },
@@ -39,7 +40,7 @@ const server = http.createServer((req, res) => {
   const requestUrl = new URL(req.url, `http://${req.headers.host}`);
   if (requestUrl.pathname === "/api/snapshot") return send(res, 200, "application/json", JSON.stringify(marketSnapshot));
   if (requestUrl.pathname === "/api/health") return send(res, 200, "application/json", JSON.stringify({ ok: true, mode: marketSnapshot.mode }));
-  if (requestUrl.pathname === "/api/plan-review") return send(res, 503, "application/json", JSON.stringify({ configured: false, message: "Local AI review needs Vercel with GEMINI_API_KEY configured." }));
+  if (requestUrl.pathname === "/api/plan-review") return send(res, 503, "application/json", JSON.stringify({ configured: false, message: "AI review is disabled locally until verified market evidence is connected." }));
 
   const safePath = requestUrl.pathname === "/" ? "/index.html" : requestUrl.pathname;
   const filename = path.normalize(path.join(PUBLIC_DIR, safePath));

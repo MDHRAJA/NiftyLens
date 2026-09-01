@@ -41,3 +41,18 @@ Add a server-side connector per source, cache each raw response with its source 
 3. Deploy. Static UI is served from `public/`; the Gemini plan review runs server-side in `api/plan-review.mjs`.
 
 The API key remains server-side; the browser sends only the plan fields the user entered. Without the key, the scenario engine remains usable and the UI says AI review is not configured.
+
+## Grounded AI contract
+
+Gemini is deliberately blocked from producing a market recommendation in demo mode. A live data connector must return `mode: "live"` and verified evidence records in this shape:
+
+```json
+{
+  "id": "nse-filing-2026-09-01",
+  "claim": "The company filed its quarterly results.",
+  "url": "https://www.nseindia.com/...",
+  "asOf": "2026-09-01T12:45:00+05:30"
+}
+```
+
+The API rejects uncited AI output and returns only conclusions that cite one or more supplied evidence records. Scenario-return cards are calculations, not AI forecasts.
