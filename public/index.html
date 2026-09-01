@@ -22,7 +22,7 @@
     <main id="top">
       <section class="hero" id="overview">
         <div><p class="eyebrow">India market intelligence · Explainable by design</p><h1>See the market.<br><em>Understand</em> the reason.</h1><p class="hero-copy">NiftyLens turns index movement, company filings and your portfolio into a research view you can verify.</p></div>
-        <div class="status-card"><span class="live-dot"></span><span id="modeLabel">Demo data · source-ready</span><small id="asOf">Loading timestamp…</small></div>
+        <div class="status-card" aria-live="polite"><span class="live-dot"></span><span id="modeLabel">Demo data · source-ready</span><small id="asOf">Loading timestamp…</small></div>
       </section>
 
       <section class="index-card" aria-labelledby="indexHeading">
@@ -34,7 +34,7 @@
 
       <section class="grid three" aria-label="Independent signal dimensions" id="reasoning"><article class="section-heading"><p class="eyebrow">Three independent views</p><h2>We do not rely on one signal.</h2><p>Every classification shows the evidence and its confidence.</p></article><div class="signal-holder" id="signals"></div></section>
 
-      <section class="section" id="research"><div class="section-header"><div><p class="eyebrow">Constituent research</p><h2>What is moving Nifty?</h2><p>Start with the index, then inspect the companies and evidence behind it.</p></div><button class="secondary-button" id="showSources" type="button">View data sources</button></div><div class="movers-chart" id="moversChart"></div><div class="table-wrap"><table><thead><tr><th>Company</th><th>Sector</th><th>Move</th><th>Signal</th><th>Index weight</th><th>Filing / evidence</th></tr></thead><tbody id="constituents"></tbody></table></div></section>
+      <section class="section" id="research"><div class="section-header"><div><p class="eyebrow">Constituent research</p><h2>What is moving Nifty?</h2><p>Start with the index, then inspect the companies and evidence behind it.</p></div><button class="secondary-button" id="showSources" type="button">View data sources</button></div><div class="movers-chart" id="moversChart" aria-live="polite"></div><div class="table-wrap"><table><thead><tr><th scope="col">Company</th><th scope="col">Sector</th><th scope="col">Move</th><th scope="col">Signal</th><th scope="col">Index weight</th><th scope="col">Filing / evidence</th></tr></thead><tbody id="constituents"></tbody></table></div></section>
 
       <section class="section agent-section" id="agentResearch"><div class="section-header"><div><p class="eyebrow">Four-agent stock research</p><h2>Independent views, then a final stance.</h2><p>Three research agents evaluate each live stock signal before Sentinel Agent forms the final bullish, neutral, or cautious view.</p></div><span class="agent-live" id="agentStatus">Waiting for live data</span></div><div id="agentConsensus" class="agent-consensus" aria-live="polite"><div class="agent-loading"><i></i>Building independent live-data research views…</div></div></section>
 
