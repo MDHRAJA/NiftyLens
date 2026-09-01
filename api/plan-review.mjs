@@ -7,7 +7,7 @@ function parseJson(text) {
   return match ? JSON.parse(match[0]) : null;
 }
 
-function planFacts(plan) {
+function planFacts(plan = {}) {
   const years = plan.horizon === "1 year" ? 1 : plan.horizon === "3 years" ? 3 : 5;
   const value = Number(plan.value) || 0;
   const monthly = Number(plan.monthly) || 0;
@@ -50,7 +50,7 @@ export default {
   async fetch(request) {
     if (request.method !== "POST") return json({ error: "Method not allowed" }, 405);
     try {
-      const { plan, marketContext } = await request.json();
+      const { plan = {}, marketContext } = await request.json();
       const evidence = Array.isArray(marketContext?.evidence) ? marketContext.evidence : [];
       const validEvidence = evidence.filter((item) => item.id && item.claim && item.url && item.asOf && /^https:\/\//.test(item.url));
       const evidenceIds = validEvidence.map((item) => item.id);
