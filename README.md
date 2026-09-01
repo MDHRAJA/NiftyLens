@@ -110,7 +110,7 @@ The repository includes evaluator-friendly Node tests with no external test depe
 
 - `test/plan-review.test.mjs` checks multi-holding portfolio facts and method validation.
 - `test/snapshot.test.mjs` mocks quote/fundamentals providers and checks the live snapshot, earnings evidence, and constituent count.
-- `test/stock-consensus.test.mjs` checks all three research agents and the fourth-agent downside-veto synthesis rule.
+- `test/stock-consensus.test.mjs` checks all three research agents and the Sentinel Agent's downside-veto synthesis rule.
 
 Run them with `npm test` (or `node --test` if your machine’s npm installation is unavailable).
 
