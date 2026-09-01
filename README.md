@@ -12,7 +12,7 @@ NiftyLens is an explainable Indian-market research dashboard for retail investor
 - **1–10 risk appetite** — meaningful Capital first, Balanced, Growth focused, and High growth bands replace a coarse three-choice setting.
 - **Automatic AI review** — deterministic scenario cards render first; the Gemini review then loads automatically beneath them.
 - **Grounded market claims** — source URL, timestamp, and evidence IDs are supplied to Gemini. Without evidence, it may only discuss the plan facts entered by the user.
-- **Four-agent stock research** — momentum, earnings, and risk agents independently assess each live constituent; a fourth synthesis agent forms the final stance without averaging scores.
+- **Four-agent stock research** — momentum, earnings, and risk agents independently assess each live constituent; **Sentinel Agent** forms the final stance without averaging scores.
 - **Resilient behaviour** — if a live feed or Gemini is unavailable, the interface clearly falls back rather than fabricating a market insight.
 
 ## Stack
