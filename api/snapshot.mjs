@@ -20,7 +20,7 @@ const fallbackSnapshot = {
     { label: "Market breadth", value: "Unavailable", detail: "Reconnect to refresh live quotes", confidence: 0 },
     { label: "Market mood", value: "Unavailable", detail: "No live inference is shown in fallback mode", confidence: 0 }
   ],
-  constituents: trackedCompanies.map((company, index) => ({ ...company, move: [1.42, 0.91, -0.64, 1.08, -0.28][index], signal: "Demo", filing: "Live quote feed unavailable" }))
+  constituents: trackedCompanies.map((company, index) => ({ ...company, move: [1.42, 0.91, -0.64, 1.08, -0.28][index], volatility: [0.82, 1.14, 1.36, 1.08, 0.64][index], signal: "Demo", filing: "Live quote feed unavailable" }))
 };
 
 function sources(live) {
@@ -36,11 +36,17 @@ function sources(live) {
 async function quote(symbol) {
   const response = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=5d&interval=1d`, { headers: { "user-agent": "NiftyLens/1.0" }, signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) });
   if (!response.ok) throw new Error(`Quote request failed: ${response.status}`);
-  const meta = (await response.json()).chart?.result?.[0]?.meta;
+  const chart = (await response.json()).chart?.result?.[0];
+  const meta = chart?.meta;
   const price = Number(meta?.regularMarketPrice);
   const previous = Number(meta?.chartPreviousClose || meta?.regularMarketPreviousClose);
   if (!Number.isFinite(price) || !Number.isFinite(previous) || previous === 0) throw new Error("Quote payload was incomplete");
-  return { price, move: Number((((price - previous) / previous) * 100).toFixed(2)), timestamp: meta.regularMarketTime };
+  const closes = (chart?.indicators?.quote?.[0]?.close || []).filter((value) => Number.isFinite(value));
+  const returns = closes.slice(1).map((value, index) => ((value - closes[index]) / closes[index]) * 100).filter(Number.isFinite);
+  const average = returns.reduce((sum, value) => sum + value, 0) / (returns.length || 1);
+  const variance = returns.reduce((sum, value) => sum + ((value - average) ** 2), 0) / (returns.length || 1);
+  const volatility = returns.length > 1 ? Number(Math.sqrt(variance).toFixed(2)) : 1;
+  return { price, move: Number((((price - previous) / previous) * 100).toFixed(2)), volatility, timestamp: meta.regularMarketTime };
 }
 
 async function latestEarnings(symbol) {
@@ -70,7 +76,7 @@ async function liveSnapshot() {
   const constituents = trackedCompanies.map((company, index) => {
     const item = companyQuotes[index];
     const report = earnings[index];
-    return { ...company, move: item.move, signal: item.move > 0.3 ? "Up today" : item.move < -0.3 ? "Down today" : "Near flat", filing: report ? `Latest net income: ${crore(report.value)} · quarter ended ${report.date}` : "Financial report temporarily unavailable", report };
+    return { ...company, move: item.move, volatility: item.volatility, signal: item.move > 0.3 ? "Up today" : item.move < -0.3 ? "Down today" : "Near flat", filing: report ? `Latest net income: ${crore(report.value)} · quarter ended ${report.date}` : "Financial report temporarily unavailable", report };
   });
   const gainers = constituents.filter((item) => item.move > 0).length;
   const losers = constituents.filter((item) => item.move < 0).length;
