@@ -62,26 +62,7 @@ export default {
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
           method: "POST",
           headers: { "content-type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-              maxOutputTokens: 700,
-              responseMimeType: "application/json",
-              responseSchema: {
-                type: "object",
-                properties: {
-                  headline: { type: "string" },
-                  assessment: { type: "string" },
-                  better_approach: { type: "string" },
-                  risks: { type: "array", items: { type: "string" } },
-                  questions: { type: "array", items: { type: "string" } },
-                  market_evidence_status: { type: "string" },
-                  evidence_ids: { type: "array", items: { type: "string" } }
-                },
-                required: ["headline", "assessment", "better_approach", "risks", "questions", "market_evidence_status", "evidence_ids"]
-              }
-            }
-          })
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 700, responseMimeType: "application/json" } })
         });
         if (response.ok) { payload = await response.json(); selectedModel = model; break; }
         failures.push(`${model}: ${response.status}`);
