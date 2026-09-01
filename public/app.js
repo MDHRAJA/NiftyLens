@@ -1,20 +1,32 @@
 const byId = (id) => document.getElementById(id);
-const riskNames = { 1: "Conservative", 2: "Moderate", 3: "Aggressive" };
+function normaliseRisk(value) {
+  const numeric = Number(value) || 5;
+  return numeric <= 3 ? [2, 5, 8][numeric - 1] : Math.max(1, Math.min(10, numeric));
+}
+function riskProfile(value) {
+  const score = normaliseRisk(value);
+  if (score <= 3) return { label: "Capital first", hint: "You prioritise drawdown control and should treat concentration carefully." };
+  if (score <= 6) return { label: "Balanced", hint: "You accept normal market movement while keeping diversification important." };
+  if (score <= 8) return { label: "Growth focused", hint: "You can accept larger swings in pursuit of long-term growth." };
+  return { label: "High growth", hint: "You accept significant volatility and should still define concentration limits." };
+}
+function riskLabel(value) { const score = normaliseRisk(value); return `${riskProfile(score).label} · ${score} / 10`; }
 let portfolio = JSON.parse(localStorage.getItem("niftylens-portfolio-v2") || "null");
+if (portfolio) portfolio.risk = normaliseRisk(portfolio.risk);
 let marketContext = { mode: "demo", evidence: [] };
 
 function renderPortfolio() {
   const hasPortfolio = Boolean(portfolio);
   byId("profileName").textContent = hasPortfolio ? "Portfolio" : "Set up";
-  byId("profileLabel").textContent = hasPortfolio ? `${riskNames[portfolio.risk]} · ${portfolio.stock}` : "your portfolio";
+  byId("profileLabel").textContent = hasPortfolio ? `${riskProfile(portfolio.risk).label} · ${portfolio.stock}` : "your portfolio";
   byId("editPortfolio").textContent = hasPortfolio ? "Edit portfolio inputs →" : "Set up my portfolio →";
   if (!hasPortfolio) return;
-  const cautious = portfolio.risk === 1 || portfolio.allocation >= 30;
+  const cautious = portfolio.risk <= 3 || portfolio.allocation >= 30;
   byId("recommendationTitle").textContent = cautious ? "Your concentration needs a measured response." : "A research view tailored to your portfolio.";
   byId("recommendationCopy").textContent = cautious
-    ? `${portfolio.stock} accounts for ${portfolio.allocation}% of your ₹${portfolio.value.toLocaleString("en-IN")} portfolio. Current index momentum is constructive, but concentration and your ${riskNames[portfolio.risk].toLowerCase()} risk setting call for patience.`
+    ? `${portfolio.stock} accounts for ${portfolio.allocation}% of your ₹${portfolio.value.toLocaleString("en-IN")} portfolio. Concentration and your ${riskProfile(portfolio.risk).label.toLowerCase()} risk setting call for a measured approach.`
     : `${portfolio.stock} is ${portfolio.allocation}% of your ₹${portfolio.value.toLocaleString("en-IN")} portfolio. Its research signal can be reviewed against your ${portfolio.horizon} horizon and ${portfolio.goal.toLowerCase()} goal.`;
-  byId("recommendationReasons").innerHTML = [`${portfolio.allocation}% current allocation`, `${portfolio.horizon} horizon`, portfolio.goal].map((item) => `<span>${item}</span>`).join("");
+  byId("recommendationReasons").innerHTML = [`${portfolio.allocation}% current allocation`, riskLabel(portfolio.risk), `${portfolio.horizon} horizon`, portfolio.goal].map((item) => `<span>${item}</span>`).join("");
   byId("portfolioVisual").innerHTML = `<div class="portfolio-insight"><div class="donut" style="--allocation:${portfolio.allocation}%"><div><strong>${portfolio.allocation}%</strong><span>${portfolio.stock}</span></div></div><div><span class="pill positive-bg">Your allocation</span><p>₹${Math.round(portfolio.value * portfolio.allocation / 100).toLocaleString("en-IN")} in ${portfolio.stock}<br>₹${Math.round(portfolio.value * (100 - portfolio.allocation) / 100).toLocaleString("en-IN")} across other holdings/cash</p></div></div>`;
   renderPlanReview();
 }
@@ -54,9 +66,9 @@ async function requestAiReview() {
 
 function openPortfolioDialog() {
   if (portfolio) {
-    byId("portfolioValue").value = portfolio.value; byId("monthlyContribution").value = portfolio.monthly; byId("stockSymbol").value = portfolio.stock; byId("stockAllocation").value = portfolio.allocation; byId("horizon").value = portfolio.horizon; byId("goal").value = portfolio.goal; byId("risk").value = portfolio.risk; byId("riskValue").textContent = riskNames[portfolio.risk];
+    byId("portfolioValue").value = portfolio.value; byId("monthlyContribution").value = portfolio.monthly; byId("stockSymbol").value = portfolio.stock; byId("stockAllocation").value = portfolio.allocation; byId("horizon").value = portfolio.horizon; byId("goal").value = portfolio.goal; byId("risk").value = portfolio.risk; updateRiskCopy(portfolio.risk);
   } else {
-    byId("portfolioForm").reset(); byId("riskValue").textContent = "Choose a risk level";
+    byId("portfolioForm").reset(); byId("risk").value = 5; updateRiskCopy(5);
   }
   byId("portfolioDialog").showModal();
 }
@@ -79,7 +91,8 @@ async function loadDashboard() {
 
 byId("showSources").addEventListener("click", () => byId("sourceDialog").showModal()); byId("closeSources").addEventListener("click", () => byId("sourceDialog").close());
 ["editPortfolio", "profileButton", "portfolioNav"].forEach((id) => byId(id).addEventListener("click", openPortfolioDialog)); byId("closePortfolio").addEventListener("click", () => byId("portfolioDialog").close());
-byId("risk").addEventListener("input", (event) => { byId("riskValue").textContent = riskNames[event.target.value]; });
+function updateRiskCopy(value) { const profile = riskProfile(value); byId("riskValue").textContent = riskLabel(value); byId("riskHint").textContent = profile.hint; }
+byId("risk").addEventListener("input", (event) => updateRiskCopy(event.target.value));
 byId("portfolioForm").addEventListener("submit", (event) => { event.preventDefault(); portfolio = { value:Number(byId("portfolioValue").value), monthly:Number(byId("monthlyContribution").value), stock:byId("stockSymbol").value, allocation:Number(byId("stockAllocation").value), horizon:byId("horizon").value, goal:byId("goal").value, risk:Number(byId("risk").value) }; localStorage.setItem("niftylens-portfolio-v2", JSON.stringify(portfolio)); renderPortfolio(); byId("portfolioDialog").close(); byId("portfolio").scrollIntoView({ behavior:"smooth" }); });
 document.querySelectorAll("[data-scroll]").forEach((button) => button.addEventListener("click", () => byId(button.dataset.scroll).scrollIntoView({ behavior:"smooth" })));
 renderPortfolio(); loadDashboard().catch(() => { byId("asOf").textContent = "Data temporarily unavailable"; });
