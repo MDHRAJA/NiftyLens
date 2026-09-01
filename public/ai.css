@@ -1,0 +1,2 @@
+.ai-button { margin-top:14px; border:1px solid var(--green); border-radius:8px; padding:10px 13px; background:var(--green); color:#fff; font:inherit; font-size:12px; font-weight:800; cursor:pointer; }
+.ai-button:disabled { opacity:.65; cursor:wait; } .ai-review { margin-top:13px; padding:13px; border-radius:9px; background:#edf6f0; color:#254a3a; font-size:12px; } .ai-review:empty { display:none; } .ai-review p { margin:6px 0; }

@@ -1,0 +1,4 @@
+{
+  "version": 2,
+  "functions": { "api/plan-review.js": { "runtime": "nodejs22.x" } }
+}

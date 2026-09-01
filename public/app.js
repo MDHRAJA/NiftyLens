@@ -31,7 +31,22 @@ function renderPlanReview() {
   const scenarios = [{ label:"Cautious", rate:.06 }, { label:"Illustrative", rate:.10 }, { label:"Optimistic", rate:.14 }];
   const highConcentration = portfolio.allocation >= 25;
   const approach = highConcentration ? `A better approach: cap ${portfolio.stock} near 20% and direct new monthly contributions toward a diversified Nifty 50 fund or under-represented sectors.` : `Your allocation is below the 25% concentration watch level. Keep reviewing it as new contributions change the balance.`;
-  byId("planAnalysis").innerHTML = `<div class="plan-review"><span class="eyebrow">Plan review · prototype decision engine</span><h3>${highConcentration ? "Concentration is the main trade-off." : "Your plan is reasonably diversified at this allocation."}</h3><p>Illustrative value after ${years} year${years > 1 ? "s" : ""}; includes your ₹${portfolio.monthly.toLocaleString("en-IN")} monthly contribution. Returns are scenarios, not forecasts.</p><div class="projection-grid">${scenarios.map((scenario) => { const value = futureValue(scenario.rate, years); return `<div class="projection"><span>${scenario.label}</span><strong>₹${Math.round(value).toLocaleString("en-IN")}</strong><small>${Math.round(scenario.rate * 100)}% annual scenario · gain ₹${Math.max(0, Math.round(value - invested)).toLocaleString("en-IN")}</small></div>`; }).join("")}</div><div class="alternative"><strong>Suggested approach</strong>${approach}</div></div>`;
+  byId("planAnalysis").innerHTML = `<div class="plan-review"><span class="eyebrow">Plan review · scenario engine</span><h3>${highConcentration ? "Concentration is the main trade-off." : "Your plan is reasonably diversified at this allocation."}</h3><p>Illustrative value after ${years} year${years > 1 ? "s" : ""}; includes your ₹${portfolio.monthly.toLocaleString("en-IN")} monthly contribution. Returns are scenarios, not forecasts.</p><div class="projection-grid">${scenarios.map((scenario) => { const value = futureValue(scenario.rate, years); return `<div class="projection"><span>${scenario.label}</span><strong>₹${Math.round(value).toLocaleString("en-IN")}</strong><small>${Math.round(scenario.rate * 100)}% annual scenario · gain ₹${Math.max(0, Math.round(value - invested)).toLocaleString("en-IN")}</small></div>`; }).join("")}</div><div class="alternative"><strong>Suggested approach</strong>${approach}</div><button class="ai-button" id="askAiReview" type="button">Ask AI to critique this plan</button><div id="aiReview" class="ai-review" aria-live="polite"></div></div>`;
+  byId("askAiReview").addEventListener("click", requestAiReview);
+}
+
+async function requestAiReview() {
+  const button = byId("askAiReview"); const target = byId("aiReview");
+  button.disabled = true; button.textContent = "Reviewing your plan…"; target.textContent = "";
+  try {
+    const response = await fetch("/api/plan-review", { method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify(portfolio) });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || data.error || "AI review is unavailable");
+    const review = data.review;
+    target.innerHTML = `<strong>${review.headline}</strong><p>${review.assessment}</p><p><b>Better approach:</b> ${review.better_approach}</p><p><b>Risks:</b> ${(review.risks || []).join(" · ")}</p><p><b>Questions to consider:</b> ${(review.questions || []).join(" · ")}</p>`;
+  } catch (error) {
+    target.innerHTML = `<strong>AI review is not configured yet.</strong><p>${error.message} Add <code>OPENAI_API_KEY</code> to Vercel before deploying. The scenario engine above still works locally.</p>`;
+  } finally { button.disabled = false; button.textContent = "Ask AI to critique this plan"; }
 }
 
 function openPortfolioDialog() {
