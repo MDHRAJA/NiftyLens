@@ -6,7 +6,7 @@ const DONUT_COLORS = ["#14765a", "#4cae91", "#e7ae43", "#6387c7", "#b97b63", "#8
 const escapeHtml = (value) => String(value ?? "").replace(/[&<>'"]/g, (character) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", "'":"&#39;", '"':"&quot;" })[character]);
 function safeUrl(value) { try { const url = new URL(String(value)); return url.protocol === "https:" ? escapeHtml(url.href) : "#"; } catch { return "#"; } }
 
-function normaliseRisk(value) { const numeric = Number(value) || 5; return numeric <= 3 ? [2, 5, 8][numeric - 1] : Math.max(1, Math.min(10, numeric)); }
+function normaliseRisk(value) { return Math.max(1, Math.min(10, Number(value) || 5)); }
 function riskProfile(value) { const score = normaliseRisk(value); if (score <= 3) return { label:"Capital first", hint:"You prioritise drawdown control and should treat concentration carefully." }; if (score <= 6) return { label:"Balanced", hint:"You accept normal market movement while keeping diversification important." }; if (score <= 8) return { label:"Growth focused", hint:"You can accept larger swings in pursuit of long-term growth." }; return { label:"High growth", hint:"You accept significant volatility and should still define concentration limits." }; }
 function riskLabel(value) { const score = normaliseRisk(value); return `${riskProfile(score).label} · ${score} / 10`; }
 function id() { return `portfolio-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`; }
@@ -17,7 +17,8 @@ function migratePortfolios() {
   if (Array.isArray(stored)) return stored;
   const legacy = JSON.parse(localStorage.getItem("niftylens-portfolio-v2") || "null");
   if (!legacy) return [];
-  return [{ id:id(), name:"My portfolio", value:Number(legacy.value) || 0, monthly:Number(legacy.monthly) || 0, horizon:legacy.horizon || "3 years", goal:legacy.goal || "Wealth creation", risk:normaliseRisk(legacy.risk), holdings:[{ symbol:legacy.stock || "RELIANCE", allocation:Number(legacy.allocation) || 0 }] }];
+  const legacyRisk = [2, 5, 8][Number(legacy.risk) - 1] || 5;
+  return [{ id:id(), name:"My portfolio", value:Number(legacy.value) || 0, monthly:Number(legacy.monthly) || 0, horizon:legacy.horizon || "3 years", goal:legacy.goal || "Wealth creation", risk:legacyRisk, holdings:[{ symbol:legacy.stock || "RELIANCE", allocation:Number(legacy.allocation) || 0 }] }];
 }
 let portfolios = migratePortfolios();
 let activePortfolioId = localStorage.getItem(ACTIVE_KEY) || portfolios[0]?.id || null;
@@ -72,7 +73,7 @@ function updateAllocationSummary() { const total = readHoldingRows().reduce((sum
 function renderPortfolioList() { byId("portfolioList").innerHTML = portfolios.length ? portfolios.map((item) => `<button type="button" class="portfolio-chip ${item.id === activePortfolioId ? "active" : ""}" data-portfolio-id="${item.id}"><strong>${item.name}</strong><span>${holdingsOf(item).length} holdings · ${money(item.value)}</span></button>`).join("") : `<p class="empty-portfolios">Create a portfolio, then add one or more companies.</p>`; }
 function loadPortfolioIntoForm(portfolio) { editingPortfolioId = portfolio?.id || null; byId("portfolioForm").reset(); byId("portfolioName").value = portfolio?.name || ""; byId("portfolioValue").value = portfolio?.value || ""; byId("monthlyContribution").value = portfolio?.monthly || ""; byId("horizon").value = portfolio?.horizon || ""; byId("goal").value = portfolio?.goal || ""; byId("risk").value = normaliseRisk(portfolio?.risk); updateRiskCopy(portfolio?.risk || 5); renderHoldingRows(portfolio?.holdings?.length ? portfolio.holdings : [{symbol:"",allocation:""}]); }
 function openPortfolioDialog() { renderPortfolioList(); loadPortfolioIntoForm(activePortfolio()); byId("portfolioDialog").showModal(); }
-function updateRiskCopy(value) { const profile = riskProfile(value); byId("riskValue").textContent = riskLabel(value); byId("riskHint").textContent = profile.hint; }
+function updateRiskCopy(value) { const score = normaliseRisk(value); const profile = riskProfile(score); const range = byId("risk"); range.style.setProperty("--risk-fill", `${((score - 1) / 9) * 100}%`); byId("riskValue").textContent = riskLabel(score); byId("riskHint").textContent = profile.hint; }
 
 function renderMovers(stocks) { marketContext.constituents = stocks || []; const largestMove = Math.max(...stocks.map((stock) => Math.abs(stock.move)), 1); byId("moversChart").innerHTML = stocks.map((stock) => { const height = Math.max(26, Math.round((Math.abs(stock.move) / largestMove) * 135)); return `<div class="mover"><strong>${stock.move > 0 ? "+" : ""}${stock.move.toFixed(2)}%</strong><div class="mover-bar ${stock.move < 0 ? "negative" : ""}" style="height:${height}px"></div><span>${stock.symbol}</span></div>`; }).join(""); if (activePortfolio()) renderPortfolio(); }
 function stanceClass(value) { return value === "Bullish" ? "bullish" : value === "Cautious" ? "cautious" : "neutral"; }
