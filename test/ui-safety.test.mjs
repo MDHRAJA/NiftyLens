@@ -28,3 +28,11 @@ test("keyboard focus styling is retained for interactive controls", async () => 
   assert.match(css, /button:focus-visible/);
   assert.match(css, /outline:3px solid #14765a/);
 });
+
+test("risk slider uses an explicit 1–10 calibration and visual fill", async () => {
+  const script = await read("public/app.js");
+  const css = await read("public/portfolio.css");
+  assert.match(script, /Math\.max\(1, Math\.min\(10, Number\(value\) \|\| 5\)\)/);
+  assert.match(script, /--risk-fill/);
+  assert.match(css, /linear-gradient\(to right,var\(--green\) 0 var\(--risk-fill\)/);
+});
