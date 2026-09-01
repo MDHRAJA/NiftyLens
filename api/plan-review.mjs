@@ -26,7 +26,7 @@ export default {
       const evidenceIds = validEvidence.map((item) => item.id);
       const facts = planFacts(plan);
       const prompt = `You are an educational Indian retail-investment research assistant. Provide a useful plan review based ONLY on the user plan and calculated plan facts below. Never use outside knowledge. Do not make a buy/sell recommendation, guarantee returns, or provide individualized financial advice. You may make plan-based suggestions about diversification, contribution consistency, time horizon and concentration using the calculated facts. You may make a factual MARKET claim only if it cites one or more supplied evidence IDs. If there is no market evidence, state that market-specific analysis is unavailable, but still give plan-based suggestions. User plan: ${JSON.stringify(plan)}. Calculated plan facts: ${JSON.stringify(facts)}. Evidence: ${JSON.stringify(validEvidence)}. Return strict JSON: {"headline":"string","assessment":"string","better_approach":"string","risks":["string"],"questions":["string"],"market_evidence_status":"available or unavailable","evidence_ids":["IDs only from: ${evidenceIds.join(", ") || "none"}"]}.`;
-      const defaults = ["gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite"];
+      const defaults = ["gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite"];
       const configuredFallbacks = (process.env.GEMINI_FALLBACK_MODELS || defaults.slice(1).join(",")).split(",").map((model) => model.trim()).filter(Boolean);
       const models = [...new Set([process.env.GEMINI_MODEL || defaults[0], ...configuredFallbacks])];
       let payload; let selectedModel; const failures = [];
