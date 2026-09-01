@@ -36,3 +36,12 @@ test("risk slider uses an explicit 1–10 calibration and visual fill", async ()
   assert.match(script, /--risk-fill/);
   assert.match(css, /linear-gradient\(to right,var\(--green\) 0 var\(--risk-fill\)/);
 });
+
+
+test("portfolio goal selects a distinct scenario baseline", async () => {
+  const script = await read("public/app.js");
+  assert.match(script, /function goalScenarios\(goal\)/);
+  assert.match(script, /"Capital preservation":\[\{label:"Cautious",rate:\.04\}/);
+  assert.match(script, /Income:\[\{label:"Cautious",rate:\.05\}/);
+  assert.match(script, /goalScenarios\(portfolio\.goal\)/);
+});
