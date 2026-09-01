@@ -52,7 +52,7 @@ export default {
       const validEvidence = evidence.filter((item) => item.id && item.claim && item.url && item.asOf && /^https:\/\//.test(item.url));
       const evidenceIds = validEvidence.map((item) => item.id);
       const facts = planFacts(plan);
-      if (!process.env.GEMINI_API_KEY) return json({ configured: false, grounded: true, fallback: true, review: calculatedFallback(plan, facts), evidence: [], planFacts: facts });
+      if (!process.env.GEMINI_API_KEY) return json({ configured: false, grounded: true, fallback: true, fallbackReason: "missing_api_key", review: calculatedFallback(plan, facts), evidence: [], planFacts: facts });
       const prompt = `You are an educational Indian retail-investment research assistant. Provide a useful plan review based ONLY on the user plan and calculated plan facts below. Never use outside knowledge. Do not make a buy/sell recommendation, guarantee returns, or provide individualized financial advice. You may make plan-based suggestions about diversification, contribution consistency, time horizon and concentration using the calculated facts. You may make a factual MARKET claim only if it cites one or more supplied evidence IDs. If there is no market evidence, state that market-specific analysis is unavailable, but still give plan-based suggestions. User plan: ${JSON.stringify(plan)}. Calculated plan facts: ${JSON.stringify(facts)}. Evidence: ${JSON.stringify(validEvidence)}. Return strict JSON: {"headline":"string","assessment":"string","better_approach":"string","risks":["string"],"questions":["string"],"market_evidence_status":"available or unavailable","evidence_ids":["IDs only from: ${evidenceIds.join(", ") || "none"}"]}.`;
       const defaults = ["gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite"];
       const configuredFallbacks = (process.env.GEMINI_FALLBACK_MODELS || defaults.slice(1).join(",")).split(",").map((model) => model.trim()).filter(Boolean);
@@ -67,14 +67,14 @@ export default {
         if (response.ok) { payload = await response.json(); selectedModel = model; break; }
         failures.push(`${model}: ${response.status}`);
       }
-      if (!payload) return json({ configured: false, grounded: true, fallback: true, review: calculatedFallback(plan, facts), evidence: [], planFacts: facts });
+      if (!payload) return json({ configured: false, grounded: true, fallback: true, fallbackReason: "gemini_models_unavailable", providerStatusCodes: failures.map((failure) => failure.split(": ").at(-1)), review: calculatedFallback(plan, facts), evidence: [], planFacts: facts });
       const text = payload.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("") || "";
       const review = parseJson(text);
-      if (!review) return json({ configured: false, grounded: true, fallback: true, review: calculatedFallback(plan, facts), evidence: [], planFacts: facts });
+      if (!review) return json({ configured: false, grounded: true, fallback: true, fallbackReason: "invalid_gemini_response", review: calculatedFallback(plan, facts), evidence: [], planFacts: facts });
       review.evidence_ids = (review.evidence_ids || []).filter((id) => evidenceIds.includes(id));
       return json({ configured: true, grounded: true, model: selectedModel, review, evidence: validEvidence.filter((item) => review.evidence_ids.includes(item.id)), planFacts: facts });
     } catch (error) {
-      return json({ configured: false, grounded: true, fallback: true, review: calculatedFallback({}, planFacts({})), evidence: [], planFacts: planFacts({}) });
+      return json({ configured: false, grounded: true, fallback: true, fallbackReason: "request_processing_failed", review: calculatedFallback({}, planFacts({})), evidence: [], planFacts: planFacts({}) });
     }
   }
 };
