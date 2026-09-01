@@ -40,7 +40,7 @@ async function requestAiReview() {
   button.disabled = true; button.textContent = "Reviewing your plan…"; target.textContent = "";
   try {
     const response = await fetch("/api/plan-review", { method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify(portfolio) });
-    const data = await response.json();
+    const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.message || data.error || "AI review is unavailable");
     const review = data.review;
     target.innerHTML = `<strong>${review.headline}</strong><p>${review.assessment}</p><p><b>Better approach:</b> ${review.better_approach}</p><p><b>Risks:</b> ${(review.risks || []).join(" · ")}</p><p><b>Questions to consider:</b> ${(review.questions || []).join(" · ")}</p>`;
