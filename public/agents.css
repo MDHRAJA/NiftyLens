@@ -1,0 +1,12 @@
+.agent-section { background:linear-gradient(180deg,rgba(228,242,234,.55),transparent); border-radius:18px; padding:46px 28px; }
+.agent-live { border:1px solid #b9d8c5; border-radius:999px; padding:7px 10px; background:#fff; color:#176548; font-size:11px; font-weight:800; }
+.agent-consensus { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+.consensus-card { padding:17px; border:1px solid #d5e2d8; border-radius:13px; background:rgba(255,255,255,.84); box-shadow:0 8px 20px rgba(13,41,45,.05); }
+.consensus-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; } .consensus-head .eyebrow { margin-bottom:3px; } .consensus-head h3 { margin:0; font-size:18px; }
+.final-stance { border-radius:999px; padding:6px 9px; font-size:11px; font-weight:900; }
+.bullish { color:#087554; } .final-stance.bullish { background:#dff3e8; } .cautious { color:#b15e14; } .final-stance.cautious { background:#fff0d7; } .neutral { color:#557078; } .final-stance.neutral { background:#eaf0f0; }
+.agent-views { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin:15px 0; } .agent-views > div { min-width:0; padding:9px; border-radius:8px; background:#f5f8f5; } .agent-views span,.agent-views strong,.agent-views small { display:block; } .agent-views span { color:#62766c; font-size:9px; text-transform:uppercase; letter-spacing:.04em; } .agent-views strong { margin:3px 0 5px; font-size:12px; } .agent-views small { color:#5a7065; font-size:10px; line-height:1.35; }
+.synthesis { border-top:1px solid #dbe6de; padding-top:11px; } .synthesis span { color:#167055; font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.04em; } .synthesis p { margin:5px 0 0; color:#3e5b4e; font-size:12px; }
+.agent-loading,.agent-error { grid-column:1 / -1; padding:18px; border-radius:10px; background:#f2f7f3; color:#426155; font-size:13px; font-weight:700; } .agent-loading { display:flex; align-items:center; gap:9px; } .agent-loading i { width:14px; height:14px; border:2px solid #b3d6c2; border-top-color:var(--green); border-radius:50%; animation:ai-spin .8s linear infinite; }
+@media (max-width:900px) { .agent-consensus { grid-template-columns:1fr; } } @media (max-width:600px) { .agent-section { padding:35px 16px; } .agent-views { grid-template-columns:1fr; } .agent-live { display:inline-block; margin-top:10px; } }
+
