@@ -95,6 +95,7 @@ The production Vercel routes are different:
 | `npm install` | Validates/install project metadata. There are currently no external dependencies. |
 | `npm start` | Starts the local static server at `http://localhost:4173`. |
 | `npm test` | Runs the Node built-in test suite in `test/`. |
+| `npm run check` | Syntax-checks browser and server modules before deployment. |
 
 Useful checks before committing:
 
@@ -111,6 +112,7 @@ The repository includes evaluator-friendly Node tests with no external test depe
 - `test/plan-review.test.mjs` checks multi-holding portfolio facts and method validation.
 - `test/snapshot.test.mjs` mocks quote/fundamentals providers and checks the live snapshot, earnings evidence, and constituent count.
 - `test/stock-consensus.test.mjs` checks all three research agents and the Sentinel Agent's downside-veto synthesis rule.
+- `test/ui-safety.test.mjs` checks production browser security headers and core accessibility markup.
 
 Run them with `npm test` (or `node --test` if your machine’s npm installation is unavailable).
 
