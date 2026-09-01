@@ -1,0 +1,35 @@
+# NiftyLens
+
+An explainable India-market intelligence dashboard for retail investors. It starts from the Nifty 50, drills into constituent evidence, and changes its research guidance according to the user's risk profile and portfolio concentration.
+
+## Run it
+
+```powershell
+node server.js
+```
+
+Open `http://localhost:4173`.
+
+## What works now
+
+- A readable Nifty 50 dashboard with three independent signal dimensions.
+- Constituent-level research table and evidence state.
+- Profile switch that demonstrates different output on the same market input.
+- A browser-local portfolio form for self-entered value, allocation, risk, horizon and goal.
+- A visible source register for NSE, SEBI, RBI and AMFI.
+- A transparent demo-data mode, designed to survive unavailable feeds.
+
+## Source strategy
+
+| Source | Intended role |
+| --- | --- |
+| Upstox Market Data Feed | Authenticated live prices, OHLC and India VIX. The dashboard remains in demo mode until the WebSocket connector is implemented and verified; never label it live merely because an access token exists. |
+| NSE All Reports | Cached Bhavcopy / EOD fallback and reproducible analysis. |
+| NSE Corporate Filings | Quarterly results, announcements and citation-ready filings. |
+| SEBI | Regulatory context and FPI data. |
+| RBI DBIE | Macro context: policy rates, inflation and FX. |
+| AMFI | Optional mutual-fund NAV and risk data. |
+
+## Next implementation milestone
+
+Add a server-side connector per source, cache each raw response with its source URL and retrieval time, ingest filing PDFs into a vector store, and make the three agent outputs follow a structured JSON contract. Never scrape undocumented endpoints at runtime or present stale data as live.

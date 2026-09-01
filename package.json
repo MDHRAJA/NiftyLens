@@ -1,0 +1,13 @@
+{
+  "name": "niftylens",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Explainable India-market intelligence for retail investors.",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NiftyLens — India market intelligence</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/portfolio.css" />
+    <link rel="stylesheet" href="/visuals.css" />
+    <link rel="stylesheet" href="/plan.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="NiftyLens home"><span class="brand-mark">N</span>NiftyLens</a>
+      <nav aria-label="Primary navigation"><a class="active" href="#overview">Market overview</a><a href="#research">Research</a><button class="nav-button" id="portfolioNav" type="button">My portfolio</button></nav>
+      <button class="profile-button" id="profileButton" type="button"><span class="avatar">+</span><span><strong id="profileName">Set up</strong><small id="profileLabel">your portfolio</small></span></button>
+    </header>
+
+    <main id="top">
+      <section class="hero" id="overview">
+        <div><p class="eyebrow">India market intelligence · Explainable by design</p><h1>See the market.<br><em>Understand</em> the reason.</h1><p class="hero-copy">NiftyLens turns index movement, company filings and your portfolio into a research view you can verify.</p></div>
+        <div class="status-card"><span class="live-dot"></span><span id="modeLabel">Demo data · source-ready</span><small id="asOf">Loading timestamp…</small></div>
+      </section>
+
+      <section class="index-card" aria-labelledby="indexHeading">
+        <div><p class="eyebrow">Market pulse</p><h2 id="indexHeading">NIFTY 50</h2><p class="index-value" id="indexValue">—</p><p class="positive" id="indexChange">—</p></div>
+        <div class="index-assessment"><span class="pill positive-bg" id="indexStatus">—</span><h3>Today’s read</h3><p id="indexSummary">Loading market context…</p><button class="link-button" type="button" data-scroll="reasoning">See the reasoning ↓</button></div>
+      </section>
+
+      <section class="chart-grid" aria-label="Market visualizations"><article class="chart-card wide"><div class="chart-heading"><div><p class="eyebrow">Index trend</p><h2>Nifty 50 · 5 trading days</h2></div><span class="positive">+1.8%</span></div><svg class="line-chart" viewBox="0 0 620 210" role="img" aria-label="Nifty 50 five day upward trend"><defs><linearGradient id="trendFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#52b99a" stop-opacity=".34"/><stop offset="100%" stop-color="#52b99a" stop-opacity="0"/></linearGradient></defs><path d="M12 169 L110 150 L205 157 L305 105 L402 126 L500 71 L608 42 L608 198 L12 198 Z" fill="url(#trendFill)"/><path d="M12 169 L110 150 L205 157 L305 105 L402 126 L500 71 L608 42" fill="none" stroke="#14765a" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><g class="chart-labels"><text x="12" y="207">Mon</text><text x="145" y="207">Tue</text><text x="280" y="207">Wed</text><text x="415" y="207">Thu</text><text x="568" y="207">Fri</text></g></svg></article><article class="chart-card"><p class="eyebrow">Market breadth</p><h2>Gainers vs losers</h2><div class="donut" aria-label="32 gainers and 18 losers"><div><strong>64%</strong><span>gainers</span></div></div><div class="legend"><span><i class="green-dot"></i>32 gainers</span><span><i class="amber-dot"></i>18 losers</span></div></article></section>
+
+      <section class="grid three" aria-label="Independent signal dimensions" id="reasoning"><article class="section-heading"><p class="eyebrow">Three independent views</p><h2>We do not rely on one signal.</h2><p>Every classification shows the evidence and its confidence.</p></article><div class="signal-holder" id="signals"></div></section>
+
+      <section class="section" id="research"><div class="section-header"><div><p class="eyebrow">Constituent research</p><h2>What is moving Nifty?</h2><p>Start with the index, then inspect the companies and evidence behind it.</p></div><button class="secondary-button" id="showSources" type="button">View data sources</button></div><div class="movers-chart" id="moversChart"></div><div class="table-wrap"><table><thead><tr><th>Company</th><th>Sector</th><th>Move</th><th>Signal</th><th>Index weight</th><th>Filing / evidence</th></tr></thead><tbody id="constituents"></tbody></table></div></section>
+
+      <section class="recommendation" id="portfolio"><div><p class="eyebrow">Your portfolio</p><h2 id="recommendationTitle">Your research desk begins with your portfolio.</h2><p id="recommendationCopy">Tell us what you hold, your risk tolerance and your investment horizon. We’ll use only those inputs to explain whether an index signal fits you.</p><div class="reason-list" id="recommendationReasons"></div><div id="planAnalysis"></div><button class="text-button" id="editPortfolio" type="button">Set up my portfolio →</button></div><aside id="portfolioVisual"><span class="pill warning-bg">Private by default</span><h3>No broker connection needed</h3><p>Your entries remain in this browser. You decide what information to add before analysis begins.</p></aside></section>
+
+      <section class="section metrics"><div><p class="eyebrow">Trust and operations</p><h2>Every session is measurable.</h2></div><div class="metric-grid"><article><strong>3</strong><span>independent agents</span></article><article><strong id="latency">1.8s</strong><span>demo response latency</span></article><article><strong>100%</strong><span>visible source state</span></article></div></section>
+    </main>
+
+    <dialog id="sourceDialog"><div class="dialog-header"><div><p class="eyebrow">Source register</p><h2>Where the analysis comes from</h2></div><button class="close-button" id="closeSources" aria-label="Close sources">×</button></div><p class="dialog-copy">Official sources are used for citations and context. Live data is never presented as fresh when a connector is unavailable.</p><div id="sources" class="source-list"></div></dialog>
+    <dialog id="portfolioDialog"><div class="dialog-header"><div><p class="eyebrow">Your investment plan</p><h2>Give the research desk your context.</h2></div><button class="close-button" id="closePortfolio" aria-label="Close portfolio setup">×</button></div><p class="dialog-copy">This starts blank and stays in your browser. Plan projections are illustrations, not promised returns; no broker is connected and no trade is placed.</p><form id="portfolioForm" class="portfolio-form"><label>Portfolio value (₹)<input id="portfolioValue" type="number" min="0" step="1000" placeholder="e.g. 200000" required /></label><label>Monthly investment (₹)<input id="monthlyContribution" type="number" min="0" step="500" placeholder="e.g. 5000" required /></label><label>Stock being researched<select id="stockSymbol" required><option value="" selected disabled>Select a stock</option><option value="TATAMOTORS">Tata Motors</option><option value="HDFCBANK">HDFC Bank</option><option value="RELIANCE">Reliance Industries</option><option value="INFY">Infosys</option><option value="ITC">ITC</option></select></label><label>Current allocation to this stock (%)<input id="stockAllocation" type="number" min="0" max="100" step="1" placeholder="e.g. 15" required /></label><label>Investment horizon<select id="horizon" required><option value="" selected disabled>Select horizon</option><option value="1 year">1 year</option><option value="3 years">3 years</option><option value="5+ years">5+ years</option></select></label><label>Primary goal<select id="goal" required><option value="" selected disabled>Select goal</option><option value="Wealth creation">Wealth creation</option><option value="Capital preservation">Capital preservation</option><option value="Income">Income</option></select></label><fieldset><legend>Risk tolerance: <strong id="riskValue">Choose a risk level</strong></legend><input id="risk" type="range" min="1" max="3" value="2" step="1" aria-label="Risk tolerance" /><div class="range-labels"><span>Conservative</span><span>Moderate</span><span>Aggressive</span></div></fieldset><button class="primary-button" type="submit">Review my investment plan</button></form></dialog>
+    <script src="/app.js"></script>
+  </body>
+</html>
