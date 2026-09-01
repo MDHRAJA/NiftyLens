@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="/visuals.css" />
     <link rel="stylesheet" href="/plan.css" />
     <link rel="stylesheet" href="/ai.css" />
+    <link rel="stylesheet" href="/agents.css" />
     <link rel="stylesheet" href="/polish.css" />
   </head>
   <body>
@@ -34,6 +35,8 @@
       <section class="grid three" aria-label="Independent signal dimensions" id="reasoning"><article class="section-heading"><p class="eyebrow">Three independent views</p><h2>We do not rely on one signal.</h2><p>Every classification shows the evidence and its confidence.</p></article><div class="signal-holder" id="signals"></div></section>
 
       <section class="section" id="research"><div class="section-header"><div><p class="eyebrow">Constituent research</p><h2>What is moving Nifty?</h2><p>Start with the index, then inspect the companies and evidence behind it.</p></div><button class="secondary-button" id="showSources" type="button">View data sources</button></div><div class="movers-chart" id="moversChart"></div><div class="table-wrap"><table><thead><tr><th>Company</th><th>Sector</th><th>Move</th><th>Signal</th><th>Index weight</th><th>Filing / evidence</th></tr></thead><tbody id="constituents"></tbody></table></div></section>
+
+      <section class="section agent-section" id="agentResearch"><div class="section-header"><div><p class="eyebrow">Four-agent stock research</p><h2>Independent views, then a final stance.</h2><p>Three research agents evaluate each live stock signal before a fourth synthesis agent forms the final bullish, neutral, or cautious view.</p></div><span class="agent-live" id="agentStatus">Waiting for live data</span></div><div id="agentConsensus" class="agent-consensus" aria-live="polite"><div class="agent-loading"><i></i>Building independent live-data research views…</div></div></section>
 
       <section class="recommendation" id="portfolio"><div><p class="eyebrow">Your portfolio</p><h2 id="recommendationTitle">Your research desk begins with your portfolio.</h2><p id="recommendationCopy">Tell us what you hold, your risk tolerance and your investment horizon. We’ll use only those inputs to explain whether an index signal fits you.</p><div class="reason-list" id="recommendationReasons"></div><div id="planAnalysis"></div><button class="text-button" id="editPortfolio" type="button">Set up my portfolio →</button></div><aside id="portfolioVisual"><span class="pill warning-bg">Private by default</span><h3>No broker connection needed</h3><p>Your entries remain in this browser. You decide what information to add before analysis begins.</p></aside></section>
 
