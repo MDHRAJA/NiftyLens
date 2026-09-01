@@ -11,12 +11,15 @@ function planFacts(plan) {
   const years = plan.horizon === "1 year" ? 1 : plan.horizon === "3 years" ? 3 : 5;
   const value = Number(plan.value) || 0;
   const monthly = Number(plan.monthly) || 0;
-  const allocation = Number(plan.allocation) || 0;
-  return { years, portfolio_value_inr: value, monthly_contribution_inr: monthly, stock_allocation_percent: allocation, stock_value_inr: Math.round(value * allocation / 100), other_holdings_or_cash_inr: Math.round(value * (100 - allocation) / 100), contributions_over_horizon_inr: monthly * years * 12, total_contributed_inr: value + monthly * years * 12 };
+  const holdings = Array.isArray(plan.holdings) ? plan.holdings.filter((holding) => holding?.symbol && Number(holding.allocation) > 0) : [];
+  const dominant = [...holdings].sort((a, b) => Number(b.allocation) - Number(a.allocation))[0];
+  const allocation = Number(dominant?.allocation ?? plan.allocation) || 0;
+  const totalAllocation = holdings.length ? holdings.reduce((sum, holding) => sum + Number(holding.allocation || 0), 0) : allocation;
+  return { years, portfolio_value_inr: value, monthly_contribution_inr: monthly, holding_count: holdings.length || 1, largest_holding_symbol: dominant?.symbol || plan.stock || "selected holding", largest_holding_percent: allocation, largest_holding_value_inr: Math.round(value * allocation / 100), holdings_allocation_percent: totalAllocation, other_holdings_or_cash_inr: Math.round(value * (100 - totalAllocation) / 100), contributions_over_horizon_inr: monthly * years * 12, total_contributed_inr: value + monthly * years * 12 };
 }
 
 function calculatedFallback(plan, facts) {
-  const allocation = facts.stock_allocation_percent;
+  const allocation = facts.largest_holding_percent;
   const concentration = allocation >= 35;
   const shortHorizon = facts.years < 3;
   const monthlyText = facts.monthly_contribution_inr
@@ -24,12 +27,12 @@ function calculatedFallback(plan, facts) {
     : "There is no monthly contribution in this plan, so the outcome depends entirely on the starting portfolio and market movement.";
   return {
     headline: concentration ? "Your single-stock allocation deserves a measured review." : "Your allocation leaves room for diversification.",
-    assessment: `₹${facts.stock_value_inr.toLocaleString("en-IN")} of your ₹${facts.portfolio_value_inr.toLocaleString("en-IN")} portfolio (${allocation}%) is allocated to ${plan.stock || "the selected stock"}. ${monthlyText}`,
+    assessment: `Your largest position is ${facts.largest_holding_symbol} at ₹${facts.largest_holding_value_inr.toLocaleString("en-IN")} (${allocation}%). ${facts.holding_count} holding${facts.holding_count === 1 ? "" : "s"} account for ${facts.holdings_allocation_percent}% of the ₹${facts.portfolio_value_inr.toLocaleString("en-IN")} portfolio. ${monthlyText}`,
     better_approach: concentration
       ? `Consider setting a maximum position size and directing new contributions toward holdings or diversified instruments that reduce dependence on one company. Review the target allocation at a regular interval instead of reacting to daily price moves.`
       : `Keep the allocation rule explicit: decide how much of future contributions goes to the selected stock versus diversified holdings, then review it at a regular interval instead of changing it after daily price moves.`,
     risks: [
-      concentration ? `A single company represents ${allocation}% of the portfolio, so company-specific news can materially affect the overall value.` : `The selected stock can still be volatile even though its allocation is below one-third of the portfolio.`,
+      concentration ? `${facts.largest_holding_symbol} represents ${allocation}% of the portfolio, so company-specific news can materially affect the overall value.` : `The largest holding can still be volatile even though it is below one-third of the portfolio.`,
       shortHorizon ? `A ${facts.years}-year horizon may be too short to rely on equity returns for a fixed goal date.` : `A ${facts.years}-year horizon still requires reassessing risk as the goal date approaches.`,
       facts.monthly_contribution_inr ? `Missing contributions would reduce the planned ₹${facts.contributions_over_horizon_inr.toLocaleString("en-IN")} contribution amount.` : "Without ongoing contributions, recovery from a market decline may take longer."
     ],
@@ -78,3 +81,4 @@ export default {
     }
   }
 };
+
