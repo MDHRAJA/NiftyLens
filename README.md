@@ -36,4 +36,4 @@ Add a server-side connector per source, cache each raw response with its source 
 
 ## Vercel and AI review
 
-The repository includes a Vercel serverless function at `api/plan-review.js`. Before deployment, add `OPENAI_API_KEY` to the Vercel project's environment variables. `OPENAI_MODEL` is optional and defaults to `gpt-5`. The API key remains server-side; the browser sends only the plan fields the user entered. Without the key, the scenario engine remains usable and the UI says AI review is not configured.
+The repository includes a Vercel serverless function at `api/plan-review.js`. Before deployment, add `GEMINI_API_KEY` to the Vercel project's environment variables. `GEMINI_MODEL` is optional and defaults to `gemini-3.5-flash`. The API key remains server-side; the browser sends only the plan fields the user entered. Without the key, the scenario engine remains usable and the UI says AI review is not configured.

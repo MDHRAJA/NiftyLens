@@ -45,7 +45,7 @@ async function requestAiReview() {
     const review = data.review;
     target.innerHTML = `<strong>${review.headline}</strong><p>${review.assessment}</p><p><b>Better approach:</b> ${review.better_approach}</p><p><b>Risks:</b> ${(review.risks || []).join(" · ")}</p><p><b>Questions to consider:</b> ${(review.questions || []).join(" · ")}</p>`;
   } catch (error) {
-    target.innerHTML = `<strong>AI review is not configured yet.</strong><p>${error.message} Add <code>OPENAI_API_KEY</code> to Vercel before deploying. The scenario engine above still works locally.</p>`;
+    target.innerHTML = `<strong>AI review is not configured yet.</strong><p>${error.message} Add <code>GEMINI_API_KEY</code> to Vercel before deploying. The scenario engine above still works locally.</p>`;
   } finally { button.disabled = false; button.textContent = "Ask AI to critique this plan"; }
 }
 
