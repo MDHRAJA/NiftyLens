@@ -39,6 +39,7 @@ const server = http.createServer((req, res) => {
   const requestUrl = new URL(req.url, `http://${req.headers.host}`);
   if (requestUrl.pathname === "/api/snapshot") return send(res, 200, "application/json", JSON.stringify(marketSnapshot));
   if (requestUrl.pathname === "/api/health") return send(res, 200, "application/json", JSON.stringify({ ok: true, mode: marketSnapshot.mode }));
+  if (requestUrl.pathname === "/api/plan-review") return send(res, 503, "application/json", JSON.stringify({ configured: false, message: "Local AI review needs Vercel with GEMINI_API_KEY configured." }));
 
   const safePath = requestUrl.pathname === "/" ? "/index.html" : requestUrl.pathname;
   const filename = path.normalize(path.join(PUBLIC_DIR, safePath));

@@ -34,6 +34,10 @@ Open `http://localhost:4173`.
 
 Add a server-side connector per source, cache each raw response with its source URL and retrieval time, ingest filing PDFs into a vector store, and make the three agent outputs follow a structured JSON contract. Never scrape undocumented endpoints at runtime or present stale data as live.
 
-## Vercel and AI review
+## Deploy to Vercel
 
-The repository includes a Vercel serverless function at `api/plan-review.js`. Before deployment, add `GEMINI_API_KEY` to the Vercel project's environment variables. `GEMINI_MODEL` is optional and defaults to `gemini-3.5-flash`. The API key remains server-side; the browser sends only the plan fields the user entered. Without the key, the scenario engine remains usable and the UI says AI review is not configured.
+1. Import `MDHRAJA/NiftyLens` into Vercel and leave the framework preset as **Other**.
+2. Add `GEMINI_API_KEY` in **Project Settings → Environment Variables** for Production, Preview and Development. `GEMINI_MODEL` is optional and defaults to `gemini-3.5-flash`.
+3. Deploy. Static UI is served from `public/`; the Gemini plan review runs server-side in `api/plan-review.mjs`.
+
+The API key remains server-side; the browser sends only the plan fields the user entered. Without the key, the scenario engine remains usable and the UI says AI review is not configured.
