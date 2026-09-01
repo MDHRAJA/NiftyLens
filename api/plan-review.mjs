@@ -62,7 +62,26 @@ export default {
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
           method: "POST",
           headers: { "content-type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY },
-          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { maxOutputTokens: 700, responseMimeType: "application/json" } })
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              maxOutputTokens: 700,
+              responseMimeType: "application/json",
+              responseSchema: {
+                type: "object",
+                properties: {
+                  headline: { type: "string" },
+                  assessment: { type: "string" },
+                  better_approach: { type: "string" },
+                  risks: { type: "array", items: { type: "string" } },
+                  questions: { type: "array", items: { type: "string" } },
+                  market_evidence_status: { type: "string" },
+                  evidence_ids: { type: "array", items: { type: "string" } }
+                },
+                required: ["headline", "assessment", "better_approach", "risks", "questions", "market_evidence_status", "evidence_ids"]
+              }
+            }
+          })
         });
         if (response.ok) { payload = await response.json(); selectedModel = model; break; }
         failures.push(`${model}: ${response.status}`);
@@ -70,7 +89,7 @@ export default {
       if (!payload) return json({ configured: false, grounded: true, fallback: true, fallbackReason: "gemini_models_unavailable", providerStatusCodes: failures.map((failure) => failure.split(": ").at(-1)), review: calculatedFallback(plan, facts), evidence: [], planFacts: facts });
       const text = payload.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("") || "";
       const review = parseJson(text);
-      if (!review) return json({ configured: false, grounded: true, fallback: true, fallbackReason: "invalid_gemini_response", review: calculatedFallback(plan, facts), evidence: [], planFacts: facts });
+      if (!review) return json({ configured: false, grounded: true, fallback: true, fallbackReason: "invalid_gemini_response", providerFinishReason: payload.candidates?.[0]?.finishReason || payload.promptFeedback?.blockReason || "no_candidate", generatedTextLength: text.length, review: calculatedFallback(plan, facts), evidence: [], planFacts: facts });
       review.evidence_ids = (review.evidence_ids || []).filter((id) => evidenceIds.includes(id));
       return json({ configured: true, grounded: true, model: selectedModel, review, evidence: validEvidence.filter((item) => review.evidence_ids.includes(item.id)), planFacts: facts });
     } catch (error) {
