@@ -8,7 +8,7 @@ NiftyLens is an explainable Indian-market research dashboard for retail investor
 
 - **Live-delayed market view** — Nifty 50 and five tracked NSE constituents are retrieved server-side and cached briefly.
 - **Reported earnings context** — latest available quarterly net-income value and reporting date for each tracked company.
-- **Explainable portfolio review** — users enter their own holdings context; no preset portfolio or broker connection is used.
+- **Multiple portfolios and holdings** — users can name separate portfolios, add several companies with allocation percentages, and retain the unallocated balance as cash/other.
 - **1–10 risk appetite** — meaningful Capital first, Balanced, Growth focused, and High growth bands replace a coarse three-choice setting.
 - **Automatic AI review** — deterministic scenario cards render first; the Gemini review then loads automatically beneath them.
 - **Grounded market claims** — source URL, timestamp, and evidence IDs are supplied to Gemini. Without evidence, it may only discuss the plan facts entered by the user.
@@ -23,7 +23,7 @@ NiftyLens is an explainable Indian-market research dashboard for retail investor
 | Production API | Vercel Functions (`.mjs`) |
 | Market and fundamental data | Yahoo Finance delayed quote and fundamentals endpoints |
 | AI plan review | Gemini Developer API, called only from the Vercel function |
-| Client storage | Browser `localStorage` (`niftylens-portfolio-v2`) |
+| Client storage | Browser `localStorage` (`niftylens-portfolios-v3`) |
 
 ## Prerequisites
 
