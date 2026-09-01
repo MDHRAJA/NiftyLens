@@ -1,0 +1,23 @@
+:root { --navy:#0d292d; --slate:#557078; --surface:#fffefa; --shadow-soft:0 10px 30px rgba(13,41,45,.07); }
+body { background:linear-gradient(145deg,#f8f4eb 0%,#f2f5ee 48%,#f7f3ea 100%); }
+.topbar { border-color:rgba(20,35,31,.11); box-shadow:0 1px 0 rgba(20,35,31,.03); }
+.brand-mark { box-shadow:inset 0 -7px 12px rgba(0,0,0,.13); }
+nav a, .nav-button { transition:color .2s ease; } nav a:hover, .nav-button:hover { color:var(--green); }
+.hero { min-height:330px; } .hero-copy { line-height:1.65; }
+.status-card { min-width:242px; border-color:rgba(20,118,90,.25); box-shadow:var(--shadow-soft); }
+.status-card > span:not(.live-dot) { font-weight:800; color:var(--navy); }
+.index-card { position:relative; overflow:hidden; border:1px solid rgba(255,255,255,.08); background:linear-gradient(125deg,#0d292d,#103c37); }
+.index-card::after { content:""; position:absolute; width:360px; height:360px; right:-130px; top:-220px; border:1px solid rgba(159,215,189,.22); border-radius:50%; box-shadow:0 0 0 48px rgba(159,215,189,.04),0 0 0 96px rgba(159,215,189,.025); }
+.index-card > * { position:relative; z-index:1; }
+.chart-card,.signal-card,.table-wrap { box-shadow:var(--shadow-soft); } .chart-card { background:rgba(255,254,250,.92); }
+.chart-heading .positive { border-radius:999px; background:#e2f5eb; padding:5px 9px; font-size:12px; }
+.section { border-color:rgba(20,35,31,.12); } .section-header h2 { font-size:32px; }
+.movers-chart { box-shadow:inset 0 1px 0 rgba(255,255,255,.85); } .mover-bar { transition:height .35s ease,filter .2s ease; } .mover:hover .mover-bar { filter:brightness(.9); }
+tbody tr { transition:background .18s ease; } tbody tr:hover { background:#f2f8f3; }
+.recommendation { box-shadow:var(--shadow-soft); border:1px solid rgba(20,118,90,.15); }
+.reason-list span { border:1px solid rgba(20,118,90,.12); }
+.secondary-button,.primary-button { transition:transform .18s ease,box-shadow .18s ease,background .18s ease; } .secondary-button:hover,.primary-button:hover { transform:translateY(-1px); box-shadow:0 8px 16px rgba(13,41,45,.12); } .primary-button { border-radius:10px; }
+.portfolio-form input:not([type="range"]):focus,.portfolio-form select:focus { outline:3px solid rgba(20,118,90,.16); border-color:var(--green); }
+dialog { border:1px solid rgba(20,35,31,.1); max-height:calc(100vh - 42px); overflow:auto; }
+@media (max-width:760px) { .hero { min-height:0; } .status-card { min-width:0; } .section-header h2 { font-size:27px; } }
+
