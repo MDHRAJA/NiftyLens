@@ -46,7 +46,7 @@ async function requestAiReview() {
     if (!response.ok) throw new Error(data.message || data.error || "AI review is unavailable");
     const review = data.review;
     const evidenceText = data.evidence?.length ? (data.evidence || []).map((item) => `<a href="${item.url}" target="_blank" rel="noreferrer">${item.id}</a>`).join(" · ") : "No verified market evidence was used; this review is based only on your entered plan and calculated portfolio facts.";
-    target.innerHTML = `<strong>${review.headline}</strong><p>${review.assessment}</p><p><b>Better approach:</b> ${review.better_approach}</p><p><b>Risks:</b> ${(review.risks || []).join(" · ")}</p><p><b>Questions to consider:</b> ${(review.questions || []).join(" · ")}</p><p><b>Evidence status:</b> ${evidenceText}</p>`;
+    target.innerHTML = `<strong>${review.headline}</strong><p>${review.assessment}</p><p><b>Better approach:</b> ${review.better_approach}</p><p><b>Risks:</b> ${(review.risks || []).join(" · ")}</p><p><b>Questions to consider:</b> ${(review.questions || []).join(" · ")}</p><p><b>Evidence status:</b> ${evidenceText}</p><p><b>Gemini model:</b> ${data.model}</p>`;
   } catch (error) {
     target.innerHTML = `<strong>AI review is not configured yet.</strong><p>${error.message} Add <code>GEMINI_API_KEY</code> to Vercel before deploying. The scenario engine above still works locally.</p>`;
   } finally { button.disabled = false; button.textContent = "Ask AI to critique this plan"; }

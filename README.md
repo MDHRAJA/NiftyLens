@@ -37,7 +37,7 @@ Add a server-side connector per source, cache each raw response with its source 
 ## Deploy to Vercel
 
 1. Import `MDHRAJA/NiftyLens` into Vercel and leave the framework preset as **Other**.
-2. Add `GEMINI_API_KEY` in **Project Settings → Environment Variables** for Production, Preview and Development. `GEMINI_MODEL` is optional and defaults to `gemini-3.5-flash`.
+2. Add `GEMINI_API_KEY` in **Project Settings → Environment Variables** for Production, Preview and Development. `GEMINI_MODEL` is optional and defaults to `gemini-3.7-flash`. Three fallback models (`gemini-3.6-flash`, `gemini-3.5-flash`, and `gemini-3.5-flash-lite`) are retried automatically if the primary model is unavailable; override them with `GEMINI_FALLBACK_MODELS` if needed.
 3. Deploy. Static UI is served from `public/`; the Gemini plan review runs server-side in `api/plan-review.mjs`.
 
 The API key remains server-side; the browser sends only the plan fields the user entered. Without the key, the scenario engine remains usable and the UI says AI review is not configured.
