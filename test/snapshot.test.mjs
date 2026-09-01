@@ -20,6 +20,7 @@ test("snapshot composes live quotes and reported earnings evidence", async () =>
   assert.equal(data.mode, "live");
   assert.equal(data.constituents.length, 5);
   assert.equal(data.evidence.length, 6);
+  assert.equal(data.constituents[0].volatility, 1);
   assert.match(data.constituents[0].filing, /Latest net income/);
 });
 
