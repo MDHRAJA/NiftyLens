@@ -6,6 +6,12 @@ const trackedCompanies = [
   { yahoo: "ITC.NS", symbol: "ITC", name: "ITC", sector: "Consumer", weight: 3.4 }
 ];
 
+const SNAPSHOT_CACHE_MS = 55_000;
+const UPSTREAM_TIMEOUT_MS = 8_000;
+let cachedSnapshot;
+let cachedAt = 0;
+let inFlightSnapshot;
+
 const fallbackSnapshot = {
   asOf: "Demo snapshot — feed unavailable", mode: "demo", evidence: [],
   index: { name: "NIFTY 50", value: 24896.4, change: 0.63, breadth: "32 gainers / 18 losers", status: "Demo data" },
@@ -28,7 +34,7 @@ function sources(live) {
 }
 
 async function quote(symbol) {
-  const response = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=5d&interval=1d`, { headers: { "user-agent": "NiftyLens/1.0" } });
+  const response = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=5d&interval=1d`, { headers: { "user-agent": "NiftyLens/1.0" }, signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) });
   if (!response.ok) throw new Error(`Quote request failed: ${response.status}`);
   const meta = (await response.json()).chart?.result?.[0]?.meta;
   const price = Number(meta?.regularMarketPrice);
@@ -41,7 +47,7 @@ async function latestEarnings(symbol) {
   const start = Math.floor(Date.UTC(2024, 0, 1) / 1000);
   const end = Math.floor(Date.now() / 1000);
   const url = `https://query1.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/${encodeURIComponent(symbol)}?symbol=${encodeURIComponent(symbol)}&type=quarterlyNetIncome&merge=false&period1=${start}&period2=${end}`;
-  const response = await fetch(url, { headers: { "user-agent": "NiftyLens/1.0" } });
+  const response = await fetch(url, { headers: { "user-agent": "NiftyLens/1.0" }, signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) });
   if (!response.ok) throw new Error(`Earnings request failed: ${response.status}`);
   const rows = (await response.json()).timeseries?.result?.[0]?.quarterlyNetIncome || [];
   const latest = [...rows].sort((a, b) => String(a.asOfDate).localeCompare(String(b.asOfDate))).at(-1);
@@ -86,10 +92,23 @@ async function liveSnapshot() {
   };
 }
 
+async function currentSnapshot() {
+  if (cachedSnapshot && Date.now() - cachedAt < SNAPSHOT_CACHE_MS) return cachedSnapshot;
+  if (inFlightSnapshot) return inFlightSnapshot;
+  inFlightSnapshot = liveSnapshot()
+    .catch(() => ({ ...fallbackSnapshot, sources: sources(false) }))
+    .then((snapshot) => {
+      cachedSnapshot = snapshot;
+      cachedAt = Date.now();
+      return snapshot;
+    })
+    .finally(() => { inFlightSnapshot = null; });
+  return inFlightSnapshot;
+}
+
 export default {
   async fetch() {
-    let snapshot;
-    try { snapshot = await liveSnapshot(); } catch { snapshot = { ...fallbackSnapshot, sources: sources(false) }; }
+    const snapshot = await currentSnapshot();
     return Response.json(snapshot, { headers: { "cache-control": "s-maxage=60, stale-while-revalidate=120" } });
   }
 };
