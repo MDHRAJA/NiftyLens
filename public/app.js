@@ -62,7 +62,8 @@ function openPortfolioDialog() {
 }
 
 function renderMovers(stocks) {
-  byId("moversChart").innerHTML = stocks.map((stock) => { const height = Math.max(28, Math.abs(stock.move) * 120); return `<div class="mover"><strong>${stock.move > 0 ? "+" : ""}${stock.move.toFixed(2)}%</strong><div class="mover-bar ${stock.move < 0 ? "negative" : ""}" style="height:${height}px"></div><span>${stock.symbol}</span></div>`; }).join("");
+  const largestMove = Math.max(...stocks.map((stock) => Math.abs(stock.move)), 1);
+  byId("moversChart").innerHTML = stocks.map((stock) => { const height = Math.max(26, Math.round((Math.abs(stock.move) / largestMove) * 135)); return `<div class="mover"><strong>${stock.move > 0 ? "+" : ""}${stock.move.toFixed(2)}%</strong><div class="mover-bar ${stock.move < 0 ? "negative" : ""}" style="height:${height}px"></div><span>${stock.symbol}</span></div>`; }).join("");
 }
 
 async function loadDashboard() {
