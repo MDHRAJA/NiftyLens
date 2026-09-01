@@ -72,10 +72,9 @@ export default {
       const review = parseJson(text);
       if (!review) return json({ configured: false, grounded: true, fallback: true, fallbackReason: "invalid_gemini_response", providerFinishReason: payload.candidates?.[0]?.finishReason || payload.promptFeedback?.blockReason || "no_candidate", generatedTextLength: text.length, review: calculatedFallback(plan, facts), evidence: [], planFacts: facts });
       review.evidence_ids = (review.evidence_ids || []).filter((id) => evidenceIds.includes(id));
-      return json({ configured: true, grounded: true, model: selectedModel, review, evidence: validEvidence.filter((item) => review.evidence_ids.includes(item.id)), planFacts: facts });
+      return json({ configured: true, grounded: true, review, evidence: validEvidence.filter((item) => review.evidence_ids.includes(item.id)), planFacts: facts });
     } catch (error) {
       return json({ configured: false, grounded: true, fallback: true, fallbackReason: "request_processing_failed", review: calculatedFallback({}, planFacts({})), evidence: [], planFacts: planFacts({}) });
     }
   }
 };
-
