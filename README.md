@@ -12,6 +12,7 @@ NiftyLens is an explainable Indian-market research dashboard for retail investor
 - **1–10 risk appetite** — meaningful Capital first, Balanced, Growth focused, and High growth bands replace a coarse three-choice setting.
 - **Automatic AI review** — deterministic scenario cards render first; the Gemini review then loads automatically beneath them.
 - **Grounded market claims** — source URL, timestamp, and evidence IDs are supplied to Gemini. Without evidence, it may only discuss the plan facts entered by the user.
+- **Four-agent stock research** — momentum, earnings, and risk agents independently assess each live constituent; a fourth synthesis agent forms the final stance without averaging scores.
 - **Resilient behaviour** — if a live feed or Gemini is unavailable, the interface clearly falls back rather than fabricating a market insight.
 
 ## Stack
@@ -109,6 +110,7 @@ The repository includes evaluator-friendly Node tests with no external test depe
 
 - `test/plan-review.test.mjs` checks multi-holding portfolio facts and method validation.
 - `test/snapshot.test.mjs` mocks quote/fundamentals providers and checks the live snapshot, earnings evidence, and constituent count.
+- `test/stock-consensus.test.mjs` checks all three research agents and the fourth-agent downside-veto synthesis rule.
 
 Run them with `npm test` (or `node --test` if your machine’s npm installation is unavailable).
 
@@ -167,13 +169,25 @@ It is instructed to:
 
 If Gemini returns an unavailable or malformed response, NiftyLens uses a deterministic calculation-based review instead of leaving an empty card.
 
+### Four-agent stock pipeline
+
+`GET /api/stock-consensus` retrieves a fresh server-side snapshot, then creates three independent research views for every tracked stock:
+
+1. **Momentum agent** — assesses the current delayed move against the previous close.
+2. **Earnings agent** — checks whether a current reported quarterly net-income evidence point is available.
+3. **Risk agent** — evaluates the direction and size of the current one-day move.
+4. **Synthesis agent** — uses Gemini, when available, to weigh agreement, conflict, live evidence, and downside/volatility vetoes. It is explicitly prohibited from averaging agent scores, issuing trade instructions, or claiming unsupported market facts.
+
+If Gemini is unavailable, the transparent rules fallback applies the same principle: a downside or volatility veto can override positive signals; otherwise agreement and evidence quality drive the final bullish, neutral, or cautious stance.
+
 ## Project structure
 
 ```text
 NiftyLens/
 ├── api/
 │   ├── snapshot.mjs          # live delayed market quotes and earnings evidence
-│   └── plan-review.mjs       # grounded Gemini review and safe fallback
+│   ├── plan-review.mjs       # grounded Gemini review and safe fallback
+│   └── stock-consensus.mjs   # four-agent stock research and final synthesis
 ├── public/
 │   ├── index.html            # dashboard and portfolio dialog
 │   ├── app.js                # rendering, local portfolio state, review lifecycle
@@ -181,6 +195,7 @@ NiftyLens/
 ├── server.js                 # local static server and deterministic local snapshot
 ├── package.json              # npm scripts and Node requirement
 ├── vercel.json               # Vercel function and security configuration
+├── test/                     # Node API-contract tests
 └── .env.example              # required environment-variable names
 ```
 
