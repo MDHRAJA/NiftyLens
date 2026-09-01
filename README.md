@@ -44,7 +44,7 @@ The API key remains server-side; the browser sends only the plan fields the user
 
 ## Grounded AI contract
 
-Gemini is deliberately blocked from producing a market recommendation in demo mode. A live data connector must return `mode: "live"` and verified evidence records in this shape:
+Gemini always provides a plan review from user-entered values and deterministic portfolio facts. It is blocked from making market-specific claims unless a live data connector returns `mode: "live"` and verified evidence records in this shape:
 
 ```json
 {
@@ -55,4 +55,4 @@ Gemini is deliberately blocked from producing a market recommendation in demo mo
 }
 ```
 
-The API rejects uncited AI output and returns only conclusions that cite one or more supplied evidence records. Scenario-return cards are calculations, not AI forecasts.
+The API strips unknown evidence IDs. Plan-based suggestions remain available without market evidence, while market-specific claims require visible evidence. Scenario-return cards are calculations, not AI forecasts.
