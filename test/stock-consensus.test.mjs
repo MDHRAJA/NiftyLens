@@ -10,7 +10,7 @@ test("three independent agents are created for every stock", () => {
   assert.deepEqual(research[0].agents.map((agent) => agent.agent), ["Momentum agent", "Earnings agent", "Risk agent"]);
 });
 
-test("fourth agent fallback uses a downside veto instead of averaging", () => {
+test("Sentinel Agent fallback uses a downside veto instead of averaging", () => {
   const snapshot = { asOf:"01 Sep 2026", constituents:[{ symbol:"INFY", move:-1.5, report:{ value:10000000000, date:"2026-06-30" } }] };
   const research = buildResearch(snapshot);
   const final = ruleSynthesis(research)[0];
