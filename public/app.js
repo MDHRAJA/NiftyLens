@@ -1,99 +1,81 @@
 const byId = (id) => document.getElementById(id);
-function normaliseRisk(value) {
-  const numeric = Number(value) || 5;
-  return numeric <= 3 ? [2, 5, 8][numeric - 1] : Math.max(1, Math.min(10, numeric));
-}
-function riskProfile(value) {
-  const score = normaliseRisk(value);
-  if (score <= 3) return { label: "Capital first", hint: "You prioritise drawdown control and should treat concentration carefully." };
-  if (score <= 6) return { label: "Balanced", hint: "You accept normal market movement while keeping diversification important." };
-  if (score <= 8) return { label: "Growth focused", hint: "You can accept larger swings in pursuit of long-term growth." };
-  return { label: "High growth", hint: "You accept significant volatility and should still define concentration limits." };
-}
+const STORAGE_KEY = "niftylens-portfolios-v3";
+const ACTIVE_KEY = "niftylens-active-portfolio-v3";
+const HOLDING_OPTIONS = ["HDFCBANK", "RELIANCE", "INFY", "ICICIBANK", "ITC", "TATAMOTORS"];
+const DONUT_COLORS = ["#14765a", "#4cae91", "#e7ae43", "#6387c7", "#b97b63", "#8976b5"];
+
+function normaliseRisk(value) { const numeric = Number(value) || 5; return numeric <= 3 ? [2, 5, 8][numeric - 1] : Math.max(1, Math.min(10, numeric)); }
+function riskProfile(value) { const score = normaliseRisk(value); if (score <= 3) return { label:"Capital first", hint:"You prioritise drawdown control and should treat concentration carefully." }; if (score <= 6) return { label:"Balanced", hint:"You accept normal market movement while keeping diversification important." }; if (score <= 8) return { label:"Growth focused", hint:"You can accept larger swings in pursuit of long-term growth." }; return { label:"High growth", hint:"You accept significant volatility and should still define concentration limits." }; }
 function riskLabel(value) { const score = normaliseRisk(value); return `${riskProfile(score).label} · ${score} / 10`; }
-let portfolio = JSON.parse(localStorage.getItem("niftylens-portfolio-v2") || "null");
-if (portfolio) portfolio.risk = normaliseRisk(portfolio.risk);
-let marketContext = { mode: "demo", evidence: [] };
+function id() { return `portfolio-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`; }
+function money(value) { return `₹${Math.round(value || 0).toLocaleString("en-IN")}`; }
+
+function migratePortfolios() {
+  const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+  if (Array.isArray(stored)) return stored;
+  const legacy = JSON.parse(localStorage.getItem("niftylens-portfolio-v2") || "null");
+  if (!legacy) return [];
+  return [{ id:id(), name:"My portfolio", value:Number(legacy.value) || 0, monthly:Number(legacy.monthly) || 0, horizon:legacy.horizon || "3 years", goal:legacy.goal || "Wealth creation", risk:normaliseRisk(legacy.risk), holdings:[{ symbol:legacy.stock || "RELIANCE", allocation:Number(legacy.allocation) || 0 }] }];
+}
+let portfolios = migratePortfolios();
+let activePortfolioId = localStorage.getItem(ACTIVE_KEY) || portfolios[0]?.id || null;
+let editingPortfolioId = null;
+let marketContext = { mode:"demo", evidence:[] };
+function savePortfolios() { localStorage.setItem(STORAGE_KEY, JSON.stringify(portfolios)); localStorage.setItem(ACTIVE_KEY, activePortfolioId || ""); }
+function activePortfolio() { return portfolios.find((item) => item.id === activePortfolioId) || null; }
+function holdingsOf(portfolio) { return (portfolio?.holdings || []).filter((item) => item.symbol && Number(item.allocation) > 0); }
+function largestHolding(portfolio) { return [...holdingsOf(portfolio)].sort((a,b) => b.allocation - a.allocation)[0] || { symbol:"holding", allocation:0 }; }
+function allocationTotal(portfolio) { return holdingsOf(portfolio).reduce((total, item) => total + Number(item.allocation), 0); }
+
+function donutGradient(holdings) {
+  let cursor = 0; const parts = holdings.map((item, index) => { const end = Math.min(100, cursor + item.allocation); const segment = `${DONUT_COLORS[index % DONUT_COLORS.length]} ${cursor}% ${end}%`; cursor = end; return segment; });
+  if (cursor < 100) parts.push(`#f6e6be ${cursor}% 100%`);
+  return `conic-gradient(${parts.join(",")})`;
+}
 
 function renderPortfolio() {
-  const hasPortfolio = Boolean(portfolio);
-  byId("profileName").textContent = hasPortfolio ? "Portfolio" : "Set up";
-  byId("profileLabel").textContent = hasPortfolio ? `${riskProfile(portfolio.risk).label} · ${portfolio.stock}` : "your portfolio";
-  byId("editPortfolio").textContent = hasPortfolio ? "Edit portfolio inputs →" : "Set up my portfolio →";
+  const portfolio = activePortfolio(); const hasPortfolio = Boolean(portfolio);
+  byId("profileName").textContent = hasPortfolio ? portfolio.name : "Set up";
+  byId("profileLabel").textContent = hasPortfolio ? `${riskProfile(portfolio.risk).label} · ${holdingsOf(portfolio).length} holdings` : "your portfolio";
+  byId("editPortfolio").textContent = hasPortfolio ? "Manage portfolios →" : "Set up my portfolio →";
   if (!hasPortfolio) return;
-  const cautious = portfolio.risk <= 3 || portfolio.allocation >= 30;
-  byId("recommendationTitle").textContent = cautious ? "Your concentration needs a measured response." : "A research view tailored to your portfolio.";
-  byId("recommendationCopy").textContent = cautious
-    ? `${portfolio.stock} accounts for ${portfolio.allocation}% of your ₹${portfolio.value.toLocaleString("en-IN")} portfolio. Concentration and your ${riskProfile(portfolio.risk).label.toLowerCase()} risk setting call for a measured approach.`
-    : `${portfolio.stock} is ${portfolio.allocation}% of your ₹${portfolio.value.toLocaleString("en-IN")} portfolio. Its research signal can be reviewed against your ${portfolio.horizon} horizon and ${portfolio.goal.toLowerCase()} goal.`;
-  byId("recommendationReasons").innerHTML = [`${portfolio.allocation}% current allocation`, riskLabel(portfolio.risk), `${portfolio.horizon} horizon`, portfolio.goal].map((item) => `<span>${item}</span>`).join("");
-  byId("portfolioVisual").innerHTML = `<div class="portfolio-insight"><div class="donut" style="--allocation:${portfolio.allocation}%"><div><strong>${portfolio.allocation}%</strong><span>${portfolio.stock}</span></div></div><div><span class="pill positive-bg">Your allocation</span><p>₹${Math.round(portfolio.value * portfolio.allocation / 100).toLocaleString("en-IN")} in ${portfolio.stock}<br>₹${Math.round(portfolio.value * (100 - portfolio.allocation) / 100).toLocaleString("en-IN")} across other holdings/cash</p></div></div>`;
-  renderPlanReview();
+  const holdings = holdingsOf(portfolio); const largest = largestHolding(portfolio); const total = allocationTotal(portfolio); const cash = Math.max(0, 100 - total); const concentrated = largest.allocation >= 25 || portfolio.risk <= 3;
+  byId("recommendationTitle").textContent = concentrated ? "Your largest position deserves a measured response." : "A research view tailored to this portfolio.";
+  byId("recommendationCopy").textContent = `${largest.symbol} is the largest position at ${largest.allocation}% of ${money(portfolio.value)}. ${holdings.length} holdings account for ${total}% of this portfolio; ${cash}% remains outside the listed holdings/cash.`;
+  byId("recommendationReasons").innerHTML = [`${holdings.length} holdings`, `${largest.allocation}% largest position`, riskLabel(portfolio.risk), `${portfolio.horizon} horizon`, portfolio.goal].map((item) => `<span>${item}</span>`).join("");
+  const legend = holdings.map((item, index) => `<span class="allocation-key"><i style="background:${DONUT_COLORS[index % DONUT_COLORS.length]}"></i>${item.symbol} ${item.allocation}%</span>`).join("") + (cash ? `<span class="allocation-key"><i class="cash-key"></i>Cash / other ${cash}%</span>` : "");
+  byId("portfolioVisual").innerHTML = `<div class="portfolio-insight"><div class="donut portfolio-donut" style="--portfolio-gradient:${donutGradient(holdings)}"><div><strong>${total}%</strong><span>allocated</span></div></div><div class="allocation-copy"><span class="pill positive-bg">${portfolio.name}</span><p>${money(portfolio.value * largest.allocation / 100)} in ${largest.symbol}<br>${money(portfolio.value * cash / 100)} in cash / other</p><div class="allocation-legend">${legend}</div></div></div>`;
+  renderPlanReview(portfolio, largest, concentrated);
 }
 
-function futureValue(rate, years) {
-  const monthlyRate = rate / 12;
-  const months = years * 12;
-  return portfolio.value * (1 + rate) ** years + portfolio.monthly * (((1 + monthlyRate) ** months - 1) / monthlyRate);
+function futureValue(portfolio, rate, years) { const monthlyRate = rate / 12; const months = years * 12; return portfolio.value * (1 + rate) ** years + portfolio.monthly * (((1 + monthlyRate) ** months - 1) / monthlyRate); }
+function renderPlanReview(portfolio, largest, concentrated) {
+  const years = portfolio.horizon === "1 year" ? 1 : portfolio.horizon === "3 years" ? 3 : 5; const invested = portfolio.value + portfolio.monthly * years * 12; const scenarios = [{label:"Cautious",rate:.06},{label:"Illustrative",rate:.10},{label:"Optimistic",rate:.14}];
+  const approach = concentrated ? `Set a maximum position size for ${largest.symbol} and direct future contributions toward other holdings or diversified instruments.` : `Keep an explicit allocation rule for future contributions and review the balance at regular intervals.`;
+  byId("planAnalysis").innerHTML = `<div class="plan-review"><span class="eyebrow">Plan review · ${portfolio.name}</span><h3>${concentrated ? "Concentration is the main trade-off." : "Your holdings are more evenly distributed."}</h3><p>Illustrative value after ${years} year${years > 1 ? "s" : ""}; includes ${money(portfolio.monthly)} monthly contribution. Returns are scenarios, not forecasts.</p><div class="projection-grid">${scenarios.map((scenario) => { const value = futureValue(portfolio, scenario.rate, years); return `<div class="projection"><span>${scenario.label}</span><strong>${money(value)}</strong><small>${Math.round(scenario.rate * 100)}% annual scenario · gain ${money(Math.max(0, value - invested))}</small></div>`; }).join("")}</div><div class="alternative"><strong>Suggested approach</strong>${approach}</div><div id="aiReview" class="ai-review" aria-live="polite"><span class="ai-loading"><i></i>Analysing your portfolio with current market context…</span></div></div>`;
+  requestAiReview(portfolio);
 }
 
-function renderPlanReview() {
-  if (!portfolio) return;
-  const years = portfolio.horizon === "1 year" ? 1 : portfolio.horizon === "3 years" ? 3 : 5;
-  const invested = portfolio.value + portfolio.monthly * years * 12;
-  const scenarios = [{ label:"Cautious", rate:.06 }, { label:"Illustrative", rate:.10 }, { label:"Optimistic", rate:.14 }];
-  const highConcentration = portfolio.allocation >= 25;
-  const approach = highConcentration ? `A better approach: cap ${portfolio.stock} near 20% and direct new monthly contributions toward a diversified Nifty 50 fund or under-represented sectors.` : `Your allocation is below the 25% concentration watch level. Keep reviewing it as new contributions change the balance.`;
-  const evidenceNote = marketContext.mode === "live" && marketContext.evidence?.length ? "Market evidence will be cited alongside plan suggestions." : "No verified market data is connected yet; Gemini will review your plan without claiming anything about the market.";
-  byId("planAnalysis").innerHTML = `<div class="plan-review"><span class="eyebrow">Plan review · scenario engine</span><h3>${highConcentration ? "Concentration is the main trade-off." : "Your plan is reasonably diversified at this allocation."}</h3><p>Illustrative value after ${years} year${years > 1 ? "s" : ""}; includes your ₹${portfolio.monthly.toLocaleString("en-IN")} monthly contribution. Returns are scenarios, not forecasts.</p><div class="projection-grid">${scenarios.map((scenario) => { const value = futureValue(scenario.rate, years); return `<div class="projection"><span>${scenario.label}</span><strong>₹${Math.round(value).toLocaleString("en-IN")}</strong><small>${Math.round(scenario.rate * 100)}% annual scenario · gain ₹${Math.max(0, Math.round(value - invested)).toLocaleString("en-IN")}</small></div>`; }).join("")}</div><div class="alternative"><strong>Suggested approach</strong>${approach}</div><div id="aiReview" class="ai-review" aria-live="polite"><span class="ai-loading"><i></i>Analysing your inputs with current market context…</span></div></div>`;
-  requestAiReview();
+async function requestAiReview(portfolio) {
+  const target = byId("aiReview"); if (!target) return; target.innerHTML = `<span class="ai-loading"><i></i>Analysing your portfolio with current market context…</span>`;
+  try { const response = await fetch("/api/plan-review", { method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify({ plan:portfolio, marketContext }) }); const data = await response.json().catch(() => ({})); if (!response.ok) throw new Error(data.message || data.error || "AI review is unavailable"); const review = data.review; const evidenceText = data.evidence?.length ? data.evidence.map((item) => `<a href="${item.url}" target="_blank" rel="noreferrer">${item.id}</a>`).join(" · ") : "No verified market evidence was used; this review is based only on your entered portfolio and calculated facts."; target.innerHTML = `<strong>${review.headline}</strong><p>${review.assessment}</p><p><b>Better approach:</b> ${review.better_approach}</p><p><b>Risks:</b> ${(review.risks || []).join(" · ")}</p><p><b>Questions to consider:</b> ${(review.questions || []).join(" · ")}</p><p><b>Evidence status:</b> ${evidenceText}</p>`; } catch (error) { target.innerHTML = `<strong>Plan review is temporarily unavailable.</strong><p>${error.message}</p>`; }
 }
 
-async function requestAiReview() {
-  const target = byId("aiReview");
-  target.innerHTML = `<span class="ai-loading"><i></i>Analysing your inputs with current market context…</span>`;
-  try {
-    const response = await fetch("/api/plan-review", { method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify({ plan: portfolio, marketContext }) });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.message || data.error || "AI review is unavailable");
-    const review = data.review;
-    const evidenceText = data.evidence?.length ? (data.evidence || []).map((item) => `<a href="${item.url}" target="_blank" rel="noreferrer">${item.id}</a>`).join(" · ") : "No verified market evidence was used; this review is based only on your entered plan and calculated portfolio facts.";
-    target.innerHTML = `<strong>${review.headline}</strong><p>${review.assessment}</p><p><b>Better approach:</b> ${review.better_approach}</p><p><b>Risks:</b> ${(review.risks || []).join(" · ")}</p><p><b>Questions to consider:</b> ${(review.questions || []).join(" · ")}</p><p><b>Evidence status:</b> ${evidenceText}</p>`;
-  } catch (error) {
-    target.innerHTML = `<strong>AI review is not configured yet.</strong><p>${error.message} Add <code>GEMINI_API_KEY</code> to Vercel before deploying. The scenario engine above still works locally.</p>`;
-  }
-}
-
-function openPortfolioDialog() {
-  if (portfolio) {
-    byId("portfolioValue").value = portfolio.value; byId("monthlyContribution").value = portfolio.monthly; byId("stockSymbol").value = portfolio.stock; byId("stockAllocation").value = portfolio.allocation; byId("horizon").value = portfolio.horizon; byId("goal").value = portfolio.goal; byId("risk").value = portfolio.risk; updateRiskCopy(portfolio.risk);
-  } else {
-    byId("portfolioForm").reset(); byId("risk").value = 5; updateRiskCopy(5);
-  }
-  byId("portfolioDialog").showModal();
-}
-
-function renderMovers(stocks) {
-  const largestMove = Math.max(...stocks.map((stock) => Math.abs(stock.move)), 1);
-  byId("moversChart").innerHTML = stocks.map((stock) => { const height = Math.max(26, Math.round((Math.abs(stock.move) / largestMove) * 135)); return `<div class="mover"><strong>${stock.move > 0 ? "+" : ""}${stock.move.toFixed(2)}%</strong><div class="mover-bar ${stock.move < 0 ? "negative" : ""}" style="height:${height}px"></div><span>${stock.symbol}</span></div>`; }).join("");
-}
-
-async function loadDashboard() {
-  const response = await fetch("/api/snapshot"); const data = await response.json();
-  marketContext = { mode: data.mode === "live" ? "live" : "demo", evidence: data.evidence || [] };
-  byId("asOf").textContent = `As of ${data.asOf}`; byId("modeLabel").textContent = data.mode === "demo" ? "Demo data · source-ready" : "Credentials detected · live feed pending";
-  byId("indexValue").textContent = data.index.value.toLocaleString("en-IN", { minimumFractionDigits: 2 }); byId("indexChange").textContent = `▲ ${data.index.change}% today · ${data.index.breadth}`; byId("indexStatus").textContent = data.index.status; byId("indexSummary").textContent = "Momentum and volume are supportive, while institutional and volatility context asks for measured confidence.";
-  byId("signals").innerHTML = data.signals.map((signal) => `<article class="signal-card"><span class="eyebrow">${signal.label}</span><strong>${signal.value}</strong><p>${signal.detail}</p><div class="meter"><span style="width:${signal.confidence}%"></span></div><div class="confidence">${signal.confidence}% confidence</div></article>`).join("");
-  renderMovers(data.constituents);
-  byId("constituents").innerHTML = data.constituents.map((stock) => `<tr><td><span class="company">${stock.symbol}</span><small>${stock.name}</small></td><td>${stock.sector}</td><td class="${stock.move < 0 ? "move-down" : "positive"}">${stock.move > 0 ? "▲" : "▼"} ${Math.abs(stock.move).toFixed(2)}%</td><td><span class="pill ${stock.signal === "Watch" ? "warning-bg" : "positive-bg"}">${stock.signal}</span></td><td>${stock.weight}%</td><td><span class="filing">${stock.filing}</span></td></tr>`).join("");
-  byId("sources").innerHTML = data.sources.map((source) => `<a href="${source.url}" target="_blank" rel="noreferrer"><strong>${source.name}</strong><span class="source-state">${source.state}</span><small>${source.kind}</small></a>`).join("");
-}
-
-byId("showSources").addEventListener("click", () => byId("sourceDialog").showModal()); byId("closeSources").addEventListener("click", () => byId("sourceDialog").close());
-["editPortfolio", "profileButton", "portfolioNav"].forEach((id) => byId(id).addEventListener("click", openPortfolioDialog)); byId("closePortfolio").addEventListener("click", () => byId("portfolioDialog").close());
+function holdingOptions(selected = "") { return `<option value="" disabled ${selected ? "" : "selected"}>Select a company</option>${HOLDING_OPTIONS.map((symbol) => `<option value="${symbol}" ${symbol === selected ? "selected" : ""}>${symbol}</option>`).join("")}`; }
+function renderHoldingRows(holdings = [{ symbol:"", allocation:"" }]) { byId("holdingsEditor").innerHTML = holdings.map((holding, index) => `<div class="holding-row"><select class="holding-symbol" aria-label="Holding ${index + 1} company">${holdingOptions(holding.symbol)}</select><input class="holding-allocation" type="number" min="1" max="100" step="1" value="${holding.allocation || ""}" placeholder="Allocation %" aria-label="Holding ${index + 1} allocation" /><button type="button" class="remove-holding" aria-label="Remove holding ${index + 1}" ${holdings.length === 1 ? "disabled" : ""}>×</button></div>`).join(""); updateAllocationSummary(); }
+function readHoldingRows() { return [...document.querySelectorAll(".holding-row")].map((row) => ({ symbol:row.querySelector(".holding-symbol").value, allocation:Number(row.querySelector(".holding-allocation").value) || 0 })); }
+function updateAllocationSummary() { const total = readHoldingRows().reduce((sum, item) => sum + item.allocation, 0); const message = total > 100 ? "Allocation cannot exceed 100%." : `${total}% allocated · ${100 - total}% cash / other.`; byId("allocationSummary").textContent = message; byId("allocationSummary").classList.toggle("over", total > 100); }
+function renderPortfolioList() { byId("portfolioList").innerHTML = portfolios.length ? portfolios.map((item) => `<button type="button" class="portfolio-chip ${item.id === activePortfolioId ? "active" : ""}" data-portfolio-id="${item.id}"><strong>${item.name}</strong><span>${holdingsOf(item).length} holdings · ${money(item.value)}</span></button>`).join("") : `<p class="empty-portfolios">Create a portfolio, then add one or more companies.</p>`; }
+function loadPortfolioIntoForm(portfolio) { editingPortfolioId = portfolio?.id || null; byId("portfolioForm").reset(); byId("portfolioName").value = portfolio?.name || ""; byId("portfolioValue").value = portfolio?.value || ""; byId("monthlyContribution").value = portfolio?.monthly || ""; byId("horizon").value = portfolio?.horizon || ""; byId("goal").value = portfolio?.goal || ""; byId("risk").value = normaliseRisk(portfolio?.risk); updateRiskCopy(portfolio?.risk || 5); renderHoldingRows(portfolio?.holdings?.length ? portfolio.holdings : [{symbol:"",allocation:""}]); }
+function openPortfolioDialog() { renderPortfolioList(); loadPortfolioIntoForm(activePortfolio()); byId("portfolioDialog").showModal(); }
 function updateRiskCopy(value) { const profile = riskProfile(value); byId("riskValue").textContent = riskLabel(value); byId("riskHint").textContent = profile.hint; }
-byId("risk").addEventListener("input", (event) => updateRiskCopy(event.target.value));
-byId("portfolioForm").addEventListener("submit", (event) => { event.preventDefault(); portfolio = { value:Number(byId("portfolioValue").value), monthly:Number(byId("monthlyContribution").value), stock:byId("stockSymbol").value, allocation:Number(byId("stockAllocation").value), horizon:byId("horizon").value, goal:byId("goal").value, risk:Number(byId("risk").value) }; localStorage.setItem("niftylens-portfolio-v2", JSON.stringify(portfolio)); renderPortfolio(); byId("portfolioDialog").close(); byId("portfolio").scrollIntoView({ behavior:"smooth" }); });
-document.querySelectorAll("[data-scroll]").forEach((button) => button.addEventListener("click", () => byId(button.dataset.scroll).scrollIntoView({ behavior:"smooth" })));
-renderPortfolio(); loadDashboard().catch(() => { byId("asOf").textContent = "Data temporarily unavailable"; });
+
+function renderMovers(stocks) { const largestMove = Math.max(...stocks.map((stock) => Math.abs(stock.move)), 1); byId("moversChart").innerHTML = stocks.map((stock) => { const height = Math.max(26, Math.round((Math.abs(stock.move) / largestMove) * 135)); return `<div class="mover"><strong>${stock.move > 0 ? "+" : ""}${stock.move.toFixed(2)}%</strong><div class="mover-bar ${stock.move < 0 ? "negative" : ""}" style="height:${height}px"></div><span>${stock.symbol}</span></div>`; }).join(""); }
+async function loadDashboard() { const response = await fetch("/api/snapshot"); const data = await response.json(); marketContext = { mode:data.mode === "live" ? "live" : "demo", evidence:data.evidence || [] }; byId("asOf").textContent = `As of ${data.asOf}`; byId("modeLabel").textContent = data.mode === "live" ? "Live delayed market data" : "Demo fallback · feed unavailable"; byId("indexValue").textContent = data.index.value.toLocaleString("en-IN", {minimumFractionDigits:2}); byId("indexChange").textContent = `${data.index.change >= 0 ? "▲" : "▼"} ${Math.abs(data.index.change)}% today · ${data.index.breadth}`; byId("indexStatus").textContent = data.index.status; byId("indexSummary").textContent = data.mode === "live" ? "Current delayed market data is available below. Use source-stamped evidence to verify any market claim." : "Live market feed is unavailable, so the dashboard is showing labelled fallback data."; byId("signals").innerHTML = data.signals.map((signal) => `<article class="signal-card"><span class="eyebrow">${signal.label}</span><strong>${signal.value}</strong><p>${signal.detail}</p><div class="meter"><span style="width:${signal.confidence}%"></span></div><div class="confidence">${signal.confidence}% confidence</div></article>`).join(""); renderMovers(data.constituents); byId("constituents").innerHTML = data.constituents.map((stock) => `<tr><td><span class="company">${stock.symbol}</span><small>${stock.name}</small></td><td>${stock.sector}</td><td class="${stock.move < 0 ? "move-down" : "positive"}">${stock.move > 0 ? "▲" : "▼"} ${Math.abs(stock.move).toFixed(2)}%</td><td><span class="pill ${stock.move < -0.3 ? "warning-bg" : "positive-bg"}">${stock.signal}</span></td><td>${stock.weight}%</td><td><span class="filing">${stock.filing}</span></td></tr>`).join(""); byId("sources").innerHTML = data.sources.map((source) => `<a href="${source.url}" target="_blank" rel="noreferrer"><strong>${source.name}</strong><span class="source-state">${source.state}</span><small>${source.kind}</small></a>`).join(""); }
+
+byId("showSources").addEventListener("click", () => byId("sourceDialog").showModal()); byId("closeSources").addEventListener("click", () => byId("sourceDialog").close()); ["editPortfolio","profileButton","portfolioNav"].forEach((key) => byId(key).addEventListener("click", openPortfolioDialog)); byId("closePortfolio").addEventListener("click", () => byId("portfolioDialog").close());
+byId("risk").addEventListener("input", (event) => updateRiskCopy(event.target.value)); byId("addHolding").addEventListener("click", () => renderHoldingRows([...readHoldingRows(), {symbol:"",allocation:""}])); byId("holdingsEditor").addEventListener("input", updateAllocationSummary); byId("holdingsEditor").addEventListener("click", (event) => { if (event.target.matches(".remove-holding")) { event.target.closest(".holding-row").remove(); updateAllocationSummary(); } });
+byId("portfolioList").addEventListener("click", (event) => { const button = event.target.closest("[data-portfolio-id]"); if (!button) return; activePortfolioId = button.dataset.portfolioId; renderPortfolioList(); loadPortfolioIntoForm(activePortfolio()); }); byId("newPortfolio").addEventListener("click", () => { editingPortfolioId = null; loadPortfolioIntoForm(null); });
+byId("portfolioForm").addEventListener("submit", (event) => { event.preventDefault(); const holdings = readHoldingRows(); const total = holdings.reduce((sum, item) => sum + item.allocation, 0); if (holdings.some((item) => !item.symbol || !item.allocation) || total > 100) { updateAllocationSummary(); return; } if (new Set(holdings.map((item) => item.symbol)).size !== holdings.length) { byId("allocationSummary").textContent = "Choose each company once per portfolio."; byId("allocationSummary").classList.add("over"); return; } const record = { id:editingPortfolioId || id(), name:byId("portfolioName").value.trim() || "Untitled portfolio", value:Number(byId("portfolioValue").value), monthly:Number(byId("monthlyContribution").value), holdings, horizon:byId("horizon").value, goal:byId("goal").value, risk:normaliseRisk(byId("risk").value) }; portfolios = editingPortfolioId ? portfolios.map((item) => item.id === editingPortfolioId ? record : item) : [...portfolios, record]; activePortfolioId = record.id; savePortfolios(); renderPortfolio(); byId("portfolioDialog").close(); byId("portfolio").scrollIntoView({behavior:"smooth"}); });
+document.querySelectorAll("[data-scroll]").forEach((button) => button.addEventListener("click", () => byId(button.dataset.scroll).scrollIntoView({behavior:"smooth"}))); renderPortfolio(); loadDashboard().catch(() => { byId("asOf").textContent = "Data temporarily unavailable"; });
 
