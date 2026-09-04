@@ -53,3 +53,13 @@ test("scenario comparison chart is based on calculated scenario rates", async ()
   assert.match(script, /scenario\\.rate \\/ maximum/);
   assert.match(script, /Scenario rate comparison/);
 });
+
+
+test("live visualisations derive their data from tracked constituents", async () => {
+  const script = await read("public/app.js");
+  const page = await read("public/index.html");
+  assert.match(script, /function renderMarketGraphics\\(stocks\\)/);
+  assert.match(script, /renderMarketGraphics\\(stocks\\)/);
+  assert.match(page, /id="marketHeatmap"/);
+  assert.match(page, /id="marketGauge"/);
+});
