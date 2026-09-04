@@ -59,7 +59,17 @@ function renderPlanReview(portfolio, largest, concentrated) {
   const years = portfolio.horizon === "1 year" ? 1 : portfolio.horizon === "3 years" ? 3 : 5; const invested = portfolio.value + portfolio.monthly * years * 12; const volatility = portfolioVolatility(portfolio); const scenarios = goalScenarios(portfolio.goal).map((scenario) => ({ ...scenario, rate:adjustedScenarioRate(scenario.rate, volatility) }));
   const approach = concentrated ? `Set a maximum position size for ${largest.symbol} and direct future contributions toward other holdings or diversified instruments.` : `Keep an explicit allocation rule for future contributions and review the balance at regular intervals.`;
   byId("planAnalysis").innerHTML = `<div class="plan-review"><span class="eyebrow">Plan review · ${portfolio.name}</span><h3>${concentrated ? "Concentration is the main trade-off." : "Your holdings are more evenly distributed."}</h3><p>Illustrative value after ${years} year${years > 1 ? "s" : ""}; includes ${money(portfolio.monthly)} monthly contribution. Baselines reflect your ${portfolio.goal.toLowerCase()} goal, then adjust for recent live-price volatility (${volatility.toFixed(2)}% daily). This is not a profit forecast.</p><div class="projection-grid">${scenarios.map((scenario) => { const value = futureValue(portfolio, scenario.rate, years); return `<div class="projection"><span>${scenario.label}</span><strong>${money(value)}</strong><small>${scenario.rate.toLocaleString("en-IN", {style:"percent", maximumFractionDigits:1})} goal- and risk-adjusted annual scenario · gain ${money(Math.max(0, value - invested))}</small></div>`; }).join("")}</div><div class="alternative"><strong>Suggested approach</strong>${approach}</div><div id="aiReview" class="ai-review" aria-live="polite"><span class="ai-loading"><i></i>Analysing your portfolio with current market context…</span></div></div>`;
+  renderScenarioBars(scenarios);
   requestAiReview(portfolio);
+}
+
+function renderScenarioBars(scenarios) {
+  const maximum = Math.max(...scenarios.map((scenario) => scenario.rate));
+  const chart = document.createElement("div");
+  chart.className = "scenario-trajectory";
+  chart.setAttribute("aria-label", "Goal- and risk-adjusted scenario rate comparison");
+  chart.innerHTML = `<div class="trajectory-heading"><span>Scenario rate comparison</span><small>Annual assumptions · illustrative</small></div><div class="trajectory-bars">${scenarios.map((scenario) => `<div class="trajectory-bar"><span>${escapeHtml(scenario.label)}</span><i style="--scenario-height:${Math.round((scenario.rate / maximum) * 100)}%"></i><strong>${scenario.rate.toLocaleString("en-IN", { style:"percent", maximumFractionDigits:1 })}</strong></div>`).join("")}</div>`;
+  byId("planAnalysis").querySelector(".projection-grid").after(chart);
 }
 
 async function requestAiReview(portfolio) {
