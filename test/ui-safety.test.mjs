@@ -45,3 +45,11 @@ test("portfolio goal selects a distinct scenario baseline", async () => {
   assert.match(script, /Income:\[\{label:"Cautious",rate:\.05\}/);
   assert.match(script, /goalScenarios\(portfolio\.goal\)/);
 });
+
+
+test("scenario comparison chart is based on calculated scenario rates", async () => {
+  const script = await read("public/app.js");
+  assert.match(script, /function renderScenarioBars\\(scenarios\\)/);
+  assert.match(script, /scenario\\.rate \\/ maximum/);
+  assert.match(script, /Scenario rate comparison/);
+});
