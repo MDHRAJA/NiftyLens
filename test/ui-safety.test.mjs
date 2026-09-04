@@ -37,7 +37,6 @@ test("risk slider uses an explicit 1–10 calibration and visual fill", async ()
   assert.match(css, /linear-gradient\(to right,var\(--green\) 0 var\(--risk-fill\)/);
 });
 
-
 test("portfolio goal selects a distinct scenario baseline", async () => {
   const script = await read("public/app.js");
   assert.match(script, /function goalScenarios\(goal\)/);
@@ -46,20 +45,26 @@ test("portfolio goal selects a distinct scenario baseline", async () => {
   assert.match(script, /goalScenarios\(portfolio\.goal\)/);
 });
 
-
 test("scenario comparison chart is based on calculated scenario rates", async () => {
   const script = await read("public/app.js");
-  assert.match(script, /function renderScenarioBars\\(scenarios\\)/);
-  assert.match(script, /scenario\\.rate \\/ maximum/);
+  assert.match(script, /function renderScenarioBars\(scenarios\)/);
+  assert.match(script, /scenario\.rate \/ maximum/);
   assert.match(script, /Scenario rate comparison/);
 });
-
 
 test("live visualisations derive their data from tracked constituents", async () => {
   const script = await read("public/app.js");
   const page = await read("public/index.html");
-  assert.match(script, /function renderMarketGraphics\\(stocks\\)/);
-  assert.match(script, /renderMarketGraphics\\(stocks\\)/);
+  assert.match(script, /function renderMarketGraphics\(stocks\)/);
+  assert.match(script, /renderMarketGraphics\(stocks\)/);
   assert.match(page, /id="marketHeatmap"/);
   assert.match(page, /id="marketGauge"/);
 });
+
+test("top market cards share the tracked live basket rather than static metrics", async () => {
+  const script = await read("public/app.js");
+  assert.match(script, /function renderTopMarketVisuals\(stocks\)/);
+  assert.match(script, /Tracked constituents · today/);
+  assert.match(script, /renderTopMarketVisuals\(stocks\)/);
+});
+
